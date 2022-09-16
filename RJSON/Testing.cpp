@@ -1,8 +1,8 @@
 #include <iostream>
-#include "RJSON.h"
+#include "include/RJSON.h"
 
 int main()
 {
-
+    RJSON::RJSON::load("");
     return 0;
 }

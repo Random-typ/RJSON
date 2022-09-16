@@ -75,8 +75,8 @@ namespace RJSON {
 		JSONElement&					operator[](const std::string _name);
 
 
-		std::string name;
-		std::string value;
+		std::string						name;
+		std::string						value;
 		JSONElement*					parent = nullptr;
 		JSONElementArray				children;
 		JSONType						type = JSONTypes::Unknown;

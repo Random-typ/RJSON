@@ -18,12 +18,12 @@
     <ClCompile Include="Testing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RJSON.cpp">
+    <ClCompile Include="include\RJSON.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RJSON.h">
+    <ClInclude Include="include\RJSON.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
