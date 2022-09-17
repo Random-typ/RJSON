@@ -98,15 +98,23 @@ namespace RJSON
 		else
 		{
 			json += rawValue() + ",";
-			return;
+			return json;
 		}
 		for (JSONElement elem : children)
 		{
-			json += elem.asJSONInner();
+			json += elem.asJSONInner() + ",";
 		}
-		if (json.back() == ',')
+		while (json.back() == ',')
 		{
 			json.pop_back();
+		}
+		if (type == JSONTypes::Array)
+		{
+			json += "]";
+		}
+		if (type == JSONTypes::Object)
+		{
+			json += "}";
 		}
 		return json;
 	}
