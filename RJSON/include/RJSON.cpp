@@ -3,6 +3,7 @@
 namespace RJSON
 {
 	inline JSONElement RJSON::EmptyElem{ "", "" };
+	inline const char* RJSON::JSONWhitespace = " \t\n\r";
 
 	JSONElement& JSONElement::get(std::string _name)
 	{
@@ -11,16 +12,24 @@ namespace RJSON
 				return elem;
 		return RJSON::EmptyElem;
 	}
-	JSONElement& JSONElement::get(std::string _name, int _level)
-	{
-		for (JSONElement& elem : children)
-			if (elem.name == _name)
-				return elem;
 
-		if (_level != 0 && !children.empty())
-			return get(_name, --_level);
-		return RJSON::EmptyElem;
+
+	JSONElementArrayPTR JSONElement::getAll(std::string _name)
+	{
+		JSONElementArrayPTR elements;
+		for (size_t i = 0; i < children.size(); i++)
+		{
+			elements += children[i].getAll(_name);
+			if (!children.empty())
+				children[i].getAll(_name);
+			if (children[i].name == _name)
+			{
+				elements.push_back(&children[i]);
+			}
+		}
+
 	}
+
 	JSONElement& JSONElement::addChild(std::string _name, std::string _value, JSONType _type)
 	{
 		JSONElement elem;
@@ -29,41 +38,65 @@ namespace RJSON
 		elem.type = _type;
 		return addChild(elem);
 	}
+
 	JSONElement& JSONElement::addChild(JSONElement _jsonElement)
 	{
 		children.push_back(_jsonElement);
 		return children.back();
 	}
-	void JSONElement::removeChild(std::string _name, size_t _index)
+
+	bool JSONElement::removeChild(std::string _name)
 	{
-		size_t count = 0;
 		for (size_t i = 0; i < children.size(); i++)
+		{
 			if (children[i].name == _name)
-				if (count == _index)
-				{
-					children.erase(children.begin() + i);
-				}
-				else
-					count++;
+			{
+				children.erase(children.begin() + i);
+				return true;
+			}
+		}
+		return false;
 	}
-	void JSONElement::removeChild(size_t _index)
-	{
-		children.erase(children.begin() + _index);
-	}
-	const unsigned int JSONElement::countChildren(std::string _name)
-	{
-		int count = 0;
-		for (const JSONElement& elem : children)
-			if (elem.name == _name)
-				count++;
-		return count;
-	}
+
 	const bool JSONElement::hasChild(std::string _name)
 	{
 		for (const JSONElement& elem : children)
 			if (elem.name == _name)
 				return true;
 		return false;
+	}
+
+	const bool JSONElement::isEmpty()
+	{
+		return children.empty();
+	}
+
+	const bool JSONElement::erase()
+	{
+		if (parent == nullptr)
+		{
+			return false;
+		}
+		if (__int64 i = getIndex(); i < 0)
+		{
+			parent->children.erase(parent->children.begin() + i);
+			return true;
+		}
+		return false;
+	}
+
+	const __int64 JSONElement::getIndex()
+	{
+		if (parent == nullptr)
+		{
+			return -1;
+		}
+		for (size_t i = 0; i < parent->children.size(); i++)
+			if (parent->children[i].name == name)
+			{
+				return i;
+			}
+		return -1;
 	}
 
 	const std::string JSONElement::asJSON()
@@ -137,10 +170,12 @@ namespace RJSON
 			return "\"" + value + "\"";
 		}
 	}
+
 	const JSONType JSONElement::getType()
 	{
 		return type;
 	}
+
 	const void JSONElement::autoType()
 	{
 		if (!children.empty())
@@ -187,19 +222,23 @@ namespace RJSON
 		type = JSONTypes::String;
 		return;
 	}
+
 	const int JSONElement::valueAsInt()
 	{
 		return stoi(value);
 	}
+
 	const float JSONElement::valueAsFloat()
 	{
 		char* _Eptr;// that would be for error checking but im not gonna do that
 		return strtof(value.c_str(), &_Eptr);
 	}
+
 	const std::string JSONElement::valueAsString()
 	{
 		return value;
 	}
+
 	const bool JSONElement::valueAsBool()
 	{
 		if (value[0] == 't')
@@ -207,20 +246,197 @@ namespace RJSON
 		return false;
 	}
 
-	// friend
-	const bool operator==(const JSONElement& _right, const JSONElement& _left)
+	JSONElementArray operator+(const JSONElementArray& _right, const JSONElementArray& _left)
 	{
-		if (sizeof(_right) == sizeof(_left))
-		{
-			return !memcmp(&_right, &_left, sizeof(_right));
-		}
-		return false;
+		JSONElementArray elements;
+		elements.insert(elements.begin(), _right.begin(), _right.end());
+		elements.insert(elements.end(), _left.begin(), _left.end());
+		// Alternative: memcpy
+		//elements.resize(_right.size() + _left.size());
+		//memcpy_s(&elements[0], _right.size(), &_right[0], _right.size());
+		//memcpy_s(&elements[_right.size() - 1], _left.size(), &_left[0], _left.size());
+		return elements;
 	}
 
-	// friend
-	const bool operator!=(const JSONElement& _right, const JSONElement& _left)
+	JSONElementArray operator+(const JSONElementArray& _left, const JSONElementArrayPTR& _right)
 	{
-		return !(_right == _left);
+		JSONElementArray elements;
+		elements.insert(elements.begin(), _left.begin(), _left.end());
+		for (const auto elem : _right)
+		{
+			elements.push_back(*elem);
+		}
+		return elements;
+	}
+
+	JSONElementArray operator+=(JSONElementArray& _left, const JSONElementArray& _right)
+	{
+		_left.insert(_left.end(), _right.begin(), _right.end());
+		return _left;
+	}
+
+	JSONElementArray operator+=(JSONElementArray& _left, const JSONElementArrayPTR& _right)
+	{
+		for (const auto elem : _right)
+		{
+			_left.push_back(*elem);
+		}
+		return _left;
+	}
+
+	//bool operator==(const JSONElementArray& _left, const JSONElementArray& _right)
+	//{
+	//	if (_left.size() == _right.size())
+	//	{
+	//		return !memcmp(&_left[0], &_right[0], _left.size());
+	//	}
+	//	else
+	//		return false;
+	//}
+
+	//bool operator==(const JSONElementArray& _left, const JSONElementArrayPTR& _right)
+	//{
+	//	if (_left.size() == _right.size())
+	//	{
+	//		for (const auto elem1 : _left)
+	//		{
+	//			for (const auto elem2 : _right)
+	//			{
+	//				if (elem1 != *elem2)
+	//				{
+	//					return false;
+	//				}
+	//			}
+	//		}
+	//		return true;
+	//	}
+	//	else
+	//		return false;
+	//}
+
+	//bool operator!=(const JSONElementArray& _left, const JSONElementArray& _right)
+	//{
+	//	return !(_left == _right);
+	//}
+
+	//bool operator!=(const JSONElementArray& _left, const JSONElementArrayPTR& _right)
+	//{
+	//	return !(_left == _right);
+	//}
+
+	// PTR class
+
+	JSONElementArrayPTR operator+(const JSONElementArrayPTR& _left, const JSONElementArrayPTR& _right)
+	{
+		JSONElementArrayPTR elements;
+		elements.insert(elements.begin(), _left.begin(), _left.end());
+		elements.insert(elements.end(), _right.begin(), _right.end());
+		return elements;
+	}
+
+	JSONElementArrayPTR operator+(const JSONElementArrayPTR& _left, const JSONElementArray& _right)
+	{
+		JSONElementArrayPTR elements;
+		elements.insert(elements.begin(), _left.begin(), _left.end());
+		for (JSONElement elem : _right)
+		{
+			elements.push_back(&elem);
+		}
+		return elements;
+	}
+
+	JSONElementArrayPTR operator+=(JSONElementArrayPTR& _left, const JSONElementArrayPTR& _right)
+	{
+		_left.insert(_left.end(), _right.begin(), _right.end());
+		return _left;
+	}
+
+	JSONElementArrayPTR operator+=(JSONElementArrayPTR& _left, const JSONElementArray& _right)
+	{
+		for (JSONElement elem : _right)
+		{
+			_left.push_back(&elem);
+		}
+		return _left;
+	}
+
+	//bool operator==(const JSONElementArrayPTR& _left, const JSONElementArrayPTR& _right)
+	//{
+	//	if (_left.size() == _right.size())
+	//	{
+	//		for (const auto elem1 : _left)
+	//		{
+	//			for (const auto elem2 : _right)
+	//			{
+	//				if (elem1 != *elem2)
+	//				{
+	//					return false;
+	//				}
+	//			}
+	//		}
+	//		return true;
+	//	}
+	//	else
+	//		return false;
+	//}
+
+	//bool operator==(const JSONElementArrayPTR& _left, const JSONElementArray& _right)
+	//{
+	//	if (_left.size() == _right.size())
+	//	{
+	//		for (const auto elem1 : _left)
+	//		{
+	//			for (const auto elem2 : _right)
+	//			{
+	//				if (elem1 != *elem2)
+	//				{
+	//					return false;
+	//				}
+	//			}
+	//		}
+	//		return true;
+	//	}
+	//	else
+	//		return false;
+	//}
+
+	//bool operator!=(const JSONElementArrayPTR& _left, const JSONElementArrayPTR& _right)
+	//{
+	//	return JSONElementArrayPTR();
+	//}
+
+	//bool operator!=(const JSONElementArrayPTR& _left, const JSONElementArray& _right)
+	//{
+	//	return JSONElementArrayPTR();
+	//}
+
+	//// friend
+	//const bool operator==(const JSONElement& _left, const JSONElement& _right)
+	//{
+	//	if (sizeof(_left) == sizeof(_right))
+	//	{
+	//		return !memcmp(&_left, &_right, sizeof(_left));
+	//	}
+	//	return false;
+	//}
+
+	//// friend
+	//const bool operator!=(const JSONElement& _left, const JSONElement& _right)
+	//{
+	//	return !(_left == _right);
+	//}
+
+	const JSONElement operator+(const JSONElement& _left, const JSONElement& _right)
+	{
+		JSONElement element;
+		element.children = _left.children + _right.children;
+		return element;
+	}
+
+	const JSONElement& operator+=(JSONElement& _left, const JSONElement& _right)
+	{
+		_left.children += _right.children;
+		return _left;
 	}
 
 
