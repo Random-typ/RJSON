@@ -1,7 +1,29 @@
+/*COPYRIGHT AND PERMISSION NOTICE
+*                        __              __             __        ____  ___
+*         /    ------   |  |    |     | |  \   //      |  |    | /     |   | |  |
+*        /       /      |__/ __ |     | |__/  // ___   |__/    | \___  |   | |\ |
+*       /       /       |\      |     | |  \    /__    |\      |     \ |   | | \|
+*      /____.  /.       | \     |____ | |__/   ___/    | \  \__| ____/ |___| |  |
+* Copyright (c) 2022, Luca Trefz, Luca-Trefz@web.de
+*
+* Permission to use, copy, modify, and distribute this software
+* for any purpose with or without fee is hereby granted, provided
+* that the above copyright notice and this permission notice
+* appear in all copies.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+* OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+* NONINFRINGEMENT OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+* OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+* OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 #pragma once
 #include <string>
 #include <vector>
-#include <windows.networking.h>
 
 #ifdef _HAS_CXX17
 	#ifndef __RJSON__
@@ -14,6 +36,9 @@
 #ifdef __RJSON__
 namespace RJSON {
 	struct JSONElement;
+
+	class JSONElementArray;
+	class JSONElementArrayPTR;
 
 	enum class JSONTypes
 	{
@@ -66,7 +91,20 @@ namespace RJSON {
 
 	struct JSONElement
 	{
-	public:
+		JSONElement();
+
+		//JSONElement::JSONElement(JSONElement _elem);;
+
+		JSONElement(int _val);
+		JSONElement(float _val);
+		JSONElement(bool _val);
+		JSONElement(std::string _nameORjson);
+
+		JSONElement(std::string _name, int _val);
+		JSONElement(std::string _name, float _val);
+		JSONElement(std::string _name, bool _val);
+		JSONElement(std::string _name, std::string _val);
+
 		// Retrieves child element by it's name
 		// @param _name: Element name
 		// @return JSONElement&
@@ -165,6 +203,9 @@ namespace RJSON {
 	class RJSON
 	{
 	public:
+		template<typename _json>
+		RJSON(_json _JSONElements...);
+
 		static JSONElement EmptyElem;
 		static JSONElement load(std::string _jsonstructure);
 

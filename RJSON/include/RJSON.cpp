@@ -2,8 +2,48 @@
 #ifdef __RJSON__
 namespace RJSON
 {
-	inline JSONElement RJSON::EmptyElem{ "", "" };
+	inline JSONElement RJSON::EmptyElem( "", "" );
 	inline const char* RJSON::JSONWhitespace = " \t\n\r";
+
+	JSONElement::JSONElement() {}
+	
+
+	JSONElement::JSONElement(int _val) {
+		value = std::to_string(_val);
+	}
+
+	JSONElement::JSONElement(float _val) {
+		value = std::to_string(_val);
+	}
+
+	JSONElement::JSONElement(bool _val) {
+		value = std::to_string(_val);
+	}
+
+	JSONElement::JSONElement(std::string _name) {
+		name = _name;
+	}
+
+
+	JSONElement::JSONElement(std::string _name, int _val) {
+		name = _name;
+		value = std::to_string(_val);
+	}
+
+	JSONElement::JSONElement(std::string _name, float _val) {
+		name = _name;
+		value = std::to_string(_val);
+	}
+
+	JSONElement::JSONElement(std::string _name, bool _val) {
+		name = _name;
+		value = std::to_string(_val);
+	}
+
+	JSONElement::JSONElement(std::string _name, std::string _val) {
+		name = _name;
+		value = _val;
+	}
 
 	JSONElement& JSONElement::get(std::string _name)
 	{
@@ -27,7 +67,7 @@ namespace RJSON
 				elements.push_back(&children[i]);
 			}
 		}
-
+		return elements;
 	}
 
 	JSONElement& JSONElement::addChild(std::string _name, std::string _value, JSONType _type)
@@ -452,6 +492,14 @@ namespace RJSON
 
 
 	// Public
+	template<typename _json>
+	RJSON::RJSON(_json _JSONElements...)
+	{
+
+		_JSONElements.get("");
+	}
+	
+	
 	JSONElement RJSON::load(std::string _jsonstructure)
 	{
 		size_t pos = 0;
