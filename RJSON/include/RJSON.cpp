@@ -1,9 +1,10 @@
 #include "RJSON.h"
+
 #ifdef __RJSON__
 namespace RJSON
 {
-	inline JSONElement RJSON::EmptyElem( "", "" );
-	inline const char* RJSON::JSONWhitespace = " \t\n\r";
+	JSONElement RJSON::EmptyElem( "", "" );
+	const char* RJSON::JSONWhitespace = " \t\n\r";
 
 	JSONElement::JSONElement() {}
 	
@@ -170,16 +171,17 @@ namespace RJSON
 		}
 		else
 		{
-			json += rawValue() + ",";
+			json += rawValue();
 			return json;
 		}
-		for (JSONElement elem : children)
+		for (size_t i = 0; i < children.size();)
 		{
-			json += elem.asJSONInner() + ",";
-		}
-		while (json.back() == ',')
-		{
-			json.pop_back();
+			json += children[i].asJSONInner();
+			// check if this was the last element
+			if (++i < children.size())
+			{
+				json += ",";
+			}
 		}
 		if (type == JSONTypes::Array)
 		{
@@ -281,7 +283,7 @@ namespace RJSON
 
 	const bool JSONElement::valueAsBool()
 	{
-		if (value[0] == 't')
+		if (value.length() && value[0] == 't' || value[0] == 'T')
 			return true;
 		return false;
 	}
@@ -495,15 +497,24 @@ namespace RJSON
 	template<typename _json>
 	RJSON::RJSON(_json _JSONElements...)
 	{
-
+	#if _json != JSONElement
+		#error "RJSON::RJSON(). Can only be type JSONElement"
+	#endif
 		_JSONElements.get("");
 	}
 	
 	
 	JSONElement RJSON::load(std::string _jsonstructure)
 	{
-		size_t pos = 0;
-		return parse(_jsonstructure, pos);
+		try
+		{
+			size_t pos = 0;
+			return parse(_jsonstructure, pos);
+		}
+		catch (const std::exception&)
+		{
+			return JSONElement();
+		}
 	}
 
 	// Private

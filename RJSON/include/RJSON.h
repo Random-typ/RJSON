@@ -206,14 +206,14 @@ namespace RJSON {
 		template<typename _json>
 		RJSON(_json _JSONElements...);
 
-		static JSONElement EmptyElem;
-		static JSONElement load(std::string _jsonstructure);
+		static JSONElement				EmptyElem;
+		static JSONElement				load(std::string _jsonstructure);
 
 	private:
-		static JSONElement parseElement(const std::string& _data, size_t& _off, JSONType _type);
-		static JSONElement parse(const std::string& _data, size_t& _off, std::string _name = "");
+		static JSONElement				parseElement(const std::string& _data, size_t& _off, JSONType _type);
+		static JSONElement				parse(const std::string& _data, size_t& _off, std::string _name = "");
 		
-		static const char* JSONWhitespace;
+		static const char*				JSONWhitespace;
 	};
 }
 #endif // !__RJSON__
