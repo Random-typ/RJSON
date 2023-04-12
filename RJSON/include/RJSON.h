@@ -95,15 +95,18 @@ namespace RJSON {
 
 		//JSONElement::JSONElement(JSONElement _elem);;
 
-		JSONElement(int _val);
+		//JSONElement(std::initializer_list<JSONElement> _json);
+		JSONElement(size_t _val);
 		JSONElement(float _val);
 		JSONElement(bool _val);
 		JSONElement(std::string _nameORjson);
 
-		JSONElement(std::string _name, int _val);
+		JSONElement(std::string _name, size_t _val);
 		JSONElement(std::string _name, float _val);
 		JSONElement(std::string _name, bool _val);
+		JSONElement(std::string _name, JSONElementArray _json, JSONType _type = JSONTypes::Object);
 		JSONElement(std::string _name, std::string _val);
+
 
 		// Retrieves child element by it's name
 		// @param _name: Element name
@@ -115,13 +118,25 @@ namespace RJSON {
 		// @return JSONElementArrayPTR
 		JSONElementArrayPTR				getAll(std::string _name);
 
+
 		// Add a child to the current element
 		// @param _name: Element name
 		// @param _value: Value of the element
 		// @param _type: Type of the element
 		// @return JSONElement&
 		JSONElement&					addChild(std::string _name, std::string _value = "", JSONType _type = JSONTypes::Unknown);
-		
+		JSONElement&					addChild(std::string _name, size_t _value);
+		JSONElement&					addChild(std::string _name, int _value);
+		JSONElement&					addChild(std::string _name, float _value);
+		JSONElement&					addChild(std::string _name, bool _value);
+		JSONElement&					addChild(std::string _name, std::vector<JSONElement> _elements);
+		JSONElement&					addChild(std::string _name, std::vector<std::string> _array);
+		JSONElement&					addChild(std::string _name, std::vector<size_t> _array);
+		JSONElement&					addChild(std::string _name, std::vector<int> _array);
+		JSONElement&					addChild(std::string _name, std::vector<float> _array);
+		JSONElement&					addChild(std::string _name, std::vector<bool> _array);
+
+
 		// Add a child to the current element
 		// @param _jsonElement: JSON Element
 		// @return JSONElement&
@@ -137,6 +152,10 @@ namespace RJSON {
 		// @return True when child exists false otherwise
 		const bool                      hasChild(std::string _name);
 
+		// Check if this elemt exists
+		// @return True when element exists false otherwise
+		const bool						exists();
+
 		// Check if element contains children
 		// @return True if element doesn't contain children
 		const bool						isEmpty();
@@ -151,7 +170,7 @@ namespace RJSON {
 
 		// Convert this element to a json string
 		// @return std::string
-		const std::string               asJSON();
+		const std::string               asJSON(bool _formatted = false);
 
 		// Get element type
 		// @return JSONType
@@ -195,16 +214,20 @@ namespace RJSON {
 		JSONType						type = JSONTypes::Unknown;
 
 	private:
+		const std::string				asJSONFormatted(std::string& _indent);
+		const std::string               asJSONInnerFormatted(std::string& _indent);
+
 		const std::string               asJSONInner();
 		const std::string				rawValue();
 	};
 
 
-	class RJSON
+	class 
+	RJSON
 	{
 	public:
-		template<typename _json>
-		RJSON(_json _JSONElements...);
+		//template<typename _json>
+		//RJSON(_json _JSONElements...);
 
 		static JSONElement				EmptyElem;
 		static JSONElement				load(std::string _jsonstructure);

@@ -9,41 +9,72 @@ namespace RJSON
 	JSONElement::JSONElement() {}
 	
 
-	JSONElement::JSONElement(int _val) {
+	//JSONElement::JSONElement(std::initializer_list<JSONElement> _json)
+	//{
+	//	_json.size();
+	//}
+
+	JSONElement::JSONElement(size_t _val) {
 		value = std::to_string(_val);
+		type = JSONTypes::Integer;
 	}
 
 	JSONElement::JSONElement(float _val) {
 		value = std::to_string(_val);
+		type = JSONTypes::Float;
 	}
 
 	JSONElement::JSONElement(bool _val) {
-		value = std::to_string(_val);
+		if (_val)
+		{
+			value = "true";
+			return;
+		}
+		value = "false";
+		type = JSONTypes::Boolean;
 	}
 
-	JSONElement::JSONElement(std::string _name) {
-		name = _name;
+	JSONElement::JSONElement(std::string _name) 
+		: name(_name) {
+		type = JSONTypes::Unknown;
 	}
 
 
-	JSONElement::JSONElement(std::string _name, int _val) {
-		name = _name;
-		value = std::to_string(_val);
-	}
-
-	JSONElement::JSONElement(std::string _name, float _val) {
-		name = _name;
-		value = std::to_string(_val);
-	}
-
-	JSONElement::JSONElement(std::string _name, bool _val) {
+	JSONElement::JSONElement(std::string _name, size_t _val)
+	: name(_name){
 		name = _name;
 		value = std::to_string(_val);
+		type = JSONTypes::Integer;
 	}
 
-	JSONElement::JSONElement(std::string _name, std::string _val) {
-		name = _name;
-		value = _val;
+	JSONElement::JSONElement(std::string _name, float _val) 
+	: name(_name){
+		value = std::to_string(_val);
+		type = JSONTypes::Float;
+	}
+
+	JSONElement::JSONElement(std::string _name, bool _val) 
+		: name(_name)
+	{
+		type = JSONTypes::Boolean;
+		if (_val)
+		{
+			value = "true";
+			return;
+		}
+		value = "false";
+	}
+
+	JSONElement::JSONElement(std::string _name, JSONElementArray _json, JSONType _type)
+		: name(_name), 
+		children(_json),
+		type(_type){
+	}
+
+	JSONElement::JSONElement(std::string _name, std::string _val)
+	: name(_name),
+		value(_val){
+		type = JSONTypes::String;
 	}
 
 	JSONElement& JSONElement::get(std::string _name)
@@ -80,6 +111,122 @@ namespace RJSON
 		return addChild(elem);
 	}
 
+	JSONElement& JSONElement::addChild(std::string _name, size_t _value)
+	{
+		return addChild(_name, std::to_string(_value), JSONType::Integer);
+	}
+
+	JSONElement& JSONElement::addChild(std::string _name, int _value)
+	{
+		return addChild(_name, std::to_string(_value), JSONType::Integer);
+	}
+
+	JSONElement& JSONElement::addChild(std::string _name, float _value)
+	{
+		return addChild(_name, std::to_string(_value), JSONType::Float);
+	}
+
+	JSONElement& JSONElement::addChild(std::string _name, bool _value)
+	{
+		if (_value)
+		{
+			return addChild(_name, "true", JSONType::Boolean);
+			
+		}
+		return addChild(_name, "false", JSONType::Boolean);
+	}
+
+	JSONElement& JSONElement::addChild(std::string _name, std::vector<JSONElement> _elements)
+	{
+		JSONElement elem;
+		elem.name = _name;
+		for (auto& i : _elements)
+		{
+			elem.children.push_back(i);
+		}
+		elem.type = JSONType::Array;
+		return addChild(elem);
+	}
+
+	JSONElement& JSONElement::addChild(std::string _name, std::vector<std::string> _array)
+	{
+		JSONElement elem;
+		elem.name = _name;
+		for (auto& i : _array)
+		{
+			JSONElement element;
+			element.type = JSONType::String;
+			element.value = i;
+			elem.children.push_back(element);
+		}
+		elem.type = JSONType::Array;
+		return addChild(elem);
+	}
+
+	JSONElement& JSONElement::addChild(std::string _name, std::vector<size_t> _array)
+	{
+		JSONElement elem;
+		elem.name = _name;
+		for (auto& i : _array)
+		{
+			JSONElement element;
+			element.type = JSONType::Integer;
+			element.value = std::to_string(i);
+			elem.children.push_back(element);
+		}
+		elem.type = JSONType::Array;
+		return addChild(elem);
+	}
+
+	JSONElement& JSONElement::addChild(std::string _name, std::vector<int> _array)
+	{
+		JSONElement elem;
+		elem.name = _name;
+		for (auto& i : _array)
+		{
+			JSONElement element;
+			element.type = JSONType::Integer;
+			element.value = std::to_string(i);
+			elem.children.push_back(element);
+		}
+		elem.type = JSONType::Array;
+		return addChild(elem);
+	}
+
+	JSONElement& JSONElement::addChild(std::string _name, std::vector<float> _array)
+	{
+		JSONElement elem;
+		elem.name = _name;
+		for (auto& i : _array)
+		{
+			JSONElement element;
+			element.type = JSONType::Float;
+			element.value = std::to_string(i);
+			elem.children.push_back(element);
+		}
+		elem.type = JSONType::Array;
+		return addChild(elem);
+	}
+
+	JSONElement& JSONElement::addChild(std::string _name, std::vector<bool> _array)
+	{
+		JSONElement elem;
+		elem.name = _name;
+		for (auto i : _array)
+		{
+			JSONElement element;
+			element.type = JSONType::Boolean;
+			if (i)
+				element.value = "true";
+			else
+				element.value = "false";
+			
+			elem.children.push_back(element);
+		}
+		elem.type = JSONType::Array;
+		return addChild(elem);
+	}
+
 	JSONElement& JSONElement::addChild(JSONElement _jsonElement)
 	{
 		children.push_back(_jsonElement);
@@ -105,6 +252,11 @@ namespace RJSON
 			if (elem.name == _name)
 				return true;
 		return false;
+	}
+
+	const bool JSONElement::exists()
+	{
+		return !name.empty();
 	}
 
 	const bool JSONElement::isEmpty()
@@ -140,8 +292,13 @@ namespace RJSON
 		return -1;
 	}
 
-	const std::string JSONElement::asJSON()
+	const std::string JSONElement::asJSON(bool _formatted)
 	{
+		if (_formatted)
+		{
+			std::string indent;
+			return asJSONFormatted(indent);
+		}
 		if (name.empty())
 		{
 			return asJSONInner();
@@ -153,12 +310,81 @@ namespace RJSON
 		return "{" + asJSONInner() + "}";
 	}
 
+	
+	const std::string JSONElement::asJSONFormatted(std::string& _indent)
+	{
+		if (name.empty())
+		{
+			return asJSONInnerFormatted(_indent);
+		}
+		_indent += '\t';
+		if (type == JSONTypes::Array)
+		{
+			std::string front = "[\n" + _indent + asJSONInnerFormatted(_indent);
+			_indent.pop_back();
+			return front + _indent + "]";
+		}
+		std::string front = "{\n" + _indent + asJSONInnerFormatted(_indent);
+		_indent.pop_back();
+		return front + _indent + "}";
+	}
+
+	const std::string JSONElement::asJSONInnerFormatted(std::string& _indent)
+	{
+		std::string json;
+		if (!name.empty())
+		{
+			json += _indent + "\"" + name + "\": ";
+		}
+		if (type == JSONTypes::Array)
+		{
+			json += "[\n";
+			_indent += '\t';
+		}
+		else
+			if (type == JSONTypes::Object)
+			{
+				json += "{\n";
+				_indent += '\t';
+			}
+			else
+			{
+				json += rawValue();
+				return json;
+			}
+		for (size_t i = 0; i < children.size();)
+		{
+			if (type == JSONTypes::Array)
+			{
+				json += _indent;
+			}
+			json += children[i].asJSONInnerFormatted(_indent);
+			// check if this was the last element
+			if (++i < children.size())
+			{
+				json += ',';
+			}
+			json += '\n';
+		}
+		if (type == JSONTypes::Array)
+		{
+			_indent.pop_back();
+			json += _indent + ']';
+		}
+		if (type == JSONTypes::Object)
+		{
+			_indent.pop_back();
+			json += _indent + '}';
+		}
+		return json;
+	}
+
 	const std::string JSONElement::asJSONInner()
 	{
 		std::string json;
 		if (!name.empty())
 		{
-			json += "\"" + name + "\":";
+			json += "\"" + name + "\": ";
 		}
 		if (type == JSONTypes::Array)
 		{
@@ -267,11 +493,19 @@ namespace RJSON
 
 	const int JSONElement::valueAsInt()
 	{
+		if (value.empty())
+		{
+			return 0;
+		}
 		return stoi(value);
 	}
 
 	const float JSONElement::valueAsFloat()
 	{
+		if (value.empty())
+		{
+			return 0;
+		}
 		char* _Eptr;// that would be for error checking but im not gonna do that
 		return strtof(value.c_str(), &_Eptr);
 	}
@@ -494,14 +728,14 @@ namespace RJSON
 
 
 	// Public
-	template<typename _json>
-	RJSON::RJSON(_json _JSONElements...)
-	{
-	#if _json != JSONElement
-		#error "RJSON::RJSON(). Can only be type JSONElement"
-	#endif
-		_JSONElements.get("");
-	}
+	//template<typename _json>
+	//RJSON::RJSON(_json _JSONElements...)
+	//{
+	//#if _json != JSONElement
+	//	#error "RJSON::RJSON(). Can only be type JSONElement"
+	//#endif
+	//	_JSONElements.get("");
+	//}
 	
 	
 	JSONElement RJSON::load(std::string _jsonstructure)

@@ -7,13 +7,24 @@
 
 int main()
 {
-	RJSON::RJSON e = { {"1"}, {"_2"} };
-	std::fstream fs("examples/test.json");
-	std::string exampleJSON((std::istreambuf_iterator<char>(fs)), std::istreambuf_iterator<char>());
-	fs.close();
+	//RJSON::JSONElement json(
+	//	RJSON::JSONElement("root"),
+	//	RJSON::JSONElement("root"),
+	//	RJSON::JSONElement("root"),
+	//	RJSON::JSONElement("root"),
+	//	);
 
-	RJSON::JSONElement json = RJSON::RJSON::load(exampleJSON);
-	std::cout << json.asJSON();
+
+
+
+
+	//std::fstream fs("examples/test.json");
+	std::fstream fs("C:/Users/Random-Typ/source/repos/RMonitor - Server Monitor/RMonitor - Server Monitor/environment/config.json");
+	std::string JSON((std::istreambuf_iterator<char>(fs)), std::istreambuf_iterator<char>());
+	fs.close();
+	RJSON::JSONElement json = RJSON::RJSON::load(JSON);
+	auto config = json.get("config");
+	std::cout << json.asJSON(true);
 	return 0;
 
 	{
