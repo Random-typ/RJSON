@@ -35,9 +35,9 @@
 
 #ifdef __RJSON__
 namespace RJSON {
-	struct JSONElement;
+	class JSONElement;
 
-	class JSONElementArray;
+	//class JSONElementArray;
 	class JSONElementArrayPTR;
 
 	enum class JSONTypes
@@ -52,23 +52,25 @@ namespace RJSON {
 		Array
 	} typedef JSONType;
 
-	class JSONElementArray : public std::vector<JSONElement>
-	{
-	public:
-		friend JSONElementArray operator+(const JSONElementArray& _right, const JSONElementArray& _left);
-		friend JSONElementArray operator+(const JSONElementArray& _right, const JSONElementArrayPTR& _left);
+	using JSONElementArray = std::vector<JSONElement>;
 
-		friend JSONElementArray operator+=(JSONElementArray& _right, const JSONElementArray& _left);
-		friend JSONElementArray operator+=(JSONElementArray& _right, const JSONElementArrayPTR& _left);
+	//class JSONElementArray : public std::vector<JSONElement>
+	//{
+	//public:
+	//	friend JSONElementArray operator+(const JSONElementArray& _right, const JSONElementArray& _left);
+	//	friend JSONElementArray operator+(const JSONElementArray& _right, const JSONElementArrayPTR& _left);
 
-		/*
-		friend bool				operator==(const JSONElementArray& _right, const JSONElementArray& _left);
-		friend bool				operator==(const JSONElementArray& _right, const JSONElementArrayPTR& _left);
+	//	friend JSONElementArray operator+=(JSONElementArray& _right, const JSONElementArray& _left);
+	//	friend JSONElementArray operator+=(JSONElementArray& _right, const JSONElementArrayPTR& _left);
+	//	void addElement(JSONElement _jsonElement);
+	//	/*
+	//	friend bool				operator==(const JSONElementArray& _right, const JSONElementArray& _left);
+	//	friend bool				operator==(const JSONElementArray& _right, const JSONElementArrayPTR& _left);
 
-		friend bool				operator!=(const JSONElementArray& _right, const JSONElementArray& _left);
-		friend bool				operator!=(const JSONElementArray& _right, const JSONElementArrayPTR& _left);
-		*/
-	};
+	//	friend bool				operator!=(const JSONElementArray& _right, const JSONElementArray& _left);
+	//	friend bool				operator!=(const JSONElementArray& _right, const JSONElementArrayPTR& _left);
+	//	*/
+	//};
 
 	class JSONElementArrayPTR : public std::vector<JSONElement*>
 	{
@@ -88,10 +90,11 @@ namespace RJSON {
 		*/
 	};
 
-
-	struct JSONElement
+	class JSONElement
 	{
+	public:
 		JSONElement();
+		JSONElement(const JSONElement& _elem);
 
 		//JSONElement::JSONElement(JSONElement _elem);;
 
@@ -106,6 +109,8 @@ namespace RJSON {
 		JSONElement(std::string _name, bool _val);
 		JSONElement(std::string _name, JSONElementArray _json, JSONType _type = JSONTypes::Object);
 		JSONElement(std::string _name, std::string _val);
+
+		~JSONElement();
 
 
 		// Retrieves child element by it's name
@@ -127,6 +132,7 @@ namespace RJSON {
 		JSONElement&					addChild(std::string _name, std::string _value = "", JSONType _type = JSONTypes::Unknown);
 		JSONElement&					addChild(std::string _name, size_t _value);
 		JSONElement&					addChild(std::string _name, int _value);
+		JSONElement&					addChild(std::string _name, unsigned int _value);
 		JSONElement&					addChild(std::string _name, float _value);
 		JSONElement&					addChild(std::string _name, bool _value);
 		JSONElement&					addChild(std::string _name, std::vector<JSONElement> _elements);
@@ -162,15 +168,15 @@ namespace RJSON {
 
 		// Erase this element from it's parent
 		// @return True on success
-		const bool						erase();
+		//const bool						erase();
 
 		// Get the index of this element from parents perpective
 		// @return if an error occurs the return value is less tha zero.
-		const __int64					getIndex();
+		//const __int64					getIndex();
 
 		// Convert this element to a json string
 		// @return std::string
-		const std::string               asJSON(bool _formatted = false);
+		const std::string               asJSON(bool _formatted = false, std::string _whitespace = "\t");
 
 		// Get element type
 		// @return JSONType
@@ -209,21 +215,19 @@ namespace RJSON {
 
 		std::string						name;
 		std::string						value;
-		JSONElement*					parent = nullptr;
 		JSONElementArray				children;
 		JSONType						type = JSONTypes::Unknown;
 
 	private:
-		const std::string				asJSONFormatted(std::string& _indent);
-		const std::string               asJSONInnerFormatted(std::string& _indent);
+		std::string				asJSONFormatted(std::string& _indent, std::string _whitespace);
+		std::string               asJSONInnerFormatted(std::string& _indent, std::string _whitespace);
 
-		const std::string               asJSONInner();
-		const std::string				rawValue();
+		std::string               asJSONInner();
+		std::string				rawValue();
 	};
 
 
-	class 
-	RJSON
+	class RJSON
 	{
 	public:
 		//template<typename _json>

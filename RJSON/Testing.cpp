@@ -15,8 +15,14 @@ int main()
 	//	);
 
 
+	std::vector<RJSON::JSONElement> arr;
+	RJSON::JSONElement eeee("hallo", (std::string)"servus");
 
+	for (size_t i = 0; i < 20; i++)
+	{
 
+		arr.push_back(eeee);
+	}
 
 	//std::fstream fs("examples/test.json");
 	std::fstream fs("C:/Users/Random-Typ/source/repos/RMonitor - Server Monitor/RMonitor - Server Monitor/environment/config.json");
