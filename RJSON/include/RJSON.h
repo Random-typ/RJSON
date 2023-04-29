@@ -90,6 +90,22 @@ namespace RJSON {
 		*/
 	};
 
+	enum class JSONErrors
+	{
+		OK,
+		Unexpected_Character,
+		UnexpectedControl_Character,
+		MissingColon
+	};
+
+	// get index to first byte after whitespace
+#define isEOD \
+if (_off == std::string::npos)\
+		return elem;// eof/eod
+#define AfterWhiteSpace \
+	_off = _data.find_first_not_of(JSONWhitespace, _off);\
+	isEOD
+
 	class JSONElement
 	{
 	public:
@@ -112,6 +128,8 @@ namespace RJSON {
 
 		~JSONElement();
 
+		bool							hasError();
+		std::string						getErrorText();
 
 		// Retrieves child element by it's name
 		// @param _name: Element name
@@ -218,6 +236,9 @@ namespace RJSON {
 		JSONElementArray				children;
 		JSONType						type = JSONTypes::Unknown;
 
+
+		JSONErrors						error = JSONErrors::OK;
+		size_t							errorLocation = 0;
 	private:
 		std::string				asJSONFormatted(std::string& _indent, std::string _whitespace);
 		std::string               asJSONInnerFormatted(std::string& _indent, std::string _whitespace);
@@ -238,7 +259,9 @@ namespace RJSON {
 
 	private:
 		static JSONElement				parseElement(const std::string& _data, size_t& _off, JSONType _type);
-		static JSONElement				parse(const std::string& _data, size_t& _off, std::string _name = "");
+		static JSONElement				parse(const std::string& _data, size_t& _off);
+		static std::string				parseString(JSONElement& _elem, const std::string& _data, size_t& _off);
+		static void						parseValue(JSONElement& _elem, const std::string& _data, size_t& _off);
 		
 		static const char*				JSONWhitespace;
 	};

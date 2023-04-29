@@ -9,10 +9,14 @@ namespace RJSON
 	JSONElement::JSONElement() {}
 
 	JSONElement::JSONElement(const JSONElement& _elem)
-	{
-		name = _elem.name;
-		value = _elem.value;
-	}
+		:
+		name(_elem.name),
+		value(_elem.value),
+		children(_elem.children),
+		type(_elem.type),
+		error(_elem.error),
+		errorLocation(_elem.errorLocation)
+	{}
 	
 
 	//JSONElement::JSONElement(std::initializer_list<JSONElement> _json)
@@ -78,14 +82,44 @@ namespace RJSON
 	}
 
 	JSONElement::JSONElement(std::string _name, std::string _val)
+		: name(_name),
+		value(_val)
 	{
-		name = _name;
-		value = _val;
 		type = JSONTypes::String;
 	}
 
 	JSONElement::~JSONElement()
 	{
+
+	}
+
+
+	bool JSONElement::hasError()
+	{
+		if (error == JSONErrors::OK)
+		{
+			return false;
+		}
+		return true;
+	}
+	std::string JSONElement::getErrorText()
+	{
+		std::string text;
+		switch (error)
+		{
+		case JSONErrors::OK:
+			return text;
+		case JSONErrors::MissingColon:
+			text = "Colon missing at ";
+		case JSONErrors::Unexpected_Character:
+			text = "Unexpected character at ";
+		case JSONErrors::UnexpectedControl_Character:
+			text = "Unexpected control character at ";
+		default:
+			break;
+		}
+		text += std::to_string(errorLocation) + ".";
+		return text;
 	}
 
 	JSONElement& JSONElement::get(std::string _name)
@@ -244,12 +278,8 @@ namespace RJSON
 
 	JSONElement& JSONElement::addChild(JSONElement _jsonElement)
 	{
-		// dont ask why a have to do this workaround because i dont know either
-		JSONElementArray arrr;
-		arrr.push_back(_jsonElement);
 		children.push_back(_jsonElement);
 		return _jsonElement;
-		//return children.back();
 	}
 
 	bool JSONElement::removeChild(std::string _name)
@@ -779,152 +809,217 @@ namespace RJSON
 		}
 	}
 
-	// Private
-	JSONElement RJSON::parseElement(const std::string& _data, size_t& _off, JSONType _type) {
 
+	JSONElement RJSON::parse(const std::string& _data, size_t& _off)
+	{
 		JSONElement elem;
-		if (_off == _data.length() - 1)
+		AfterWhiteSpace;
+
+		switch (_data[_off])
 		{
-			_off = _data.length() - 1;
-			return elem;
+		case '{':
+			elem.type = JSONTypes::Object;
+			_off++;
+			break;
+		case '[':
+			elem.type = JSONTypes::Array;
+			_off++;
+			break;
 		}
-		if (_type == JSONTypes::Array)
+		
+		isEOD;
+		AfterWhiteSpace;
+
+		// array parsing
+		while (elem.type == JSONTypes::Array)
 		{
-			size_t end = 0;
-			size_t pos = _data.find('"', _off);
-			for (end = _data.find('"', ++pos); end != std::string::npos && _data[end - 1] == '\\'; end = _data.find('"', ++pos));
-			if (size_t off = _data.find_first_not_of(JSONWhitespace, end + 1); end != std::string::npos && off != std::string::npos && _data[off] == ',' || _data[off] == ']')
-			{// array element is string
-				elem.type = JSONTypes::String;
-				_off = pos;
-				elem.value = _data.substr(_off, end - _off);
-				_off = end;
+			JSONElement arrElem;
+			parseValue(arrElem, _data, _off);
+			elem.children.push_back(arrElem);
+			_off++;
+			AfterWhiteSpace;
+			if (_data[_off] == ',')
+			{
+				_off++;
+				AfterWhiteSpace;
+			}
+			if (_data[_off] == ':')
+			{
+				elem.children.push_back(parse(_data, _off));
+			}
+			if (_data[_off] == ']')
+			{
 				return elem;
 			}
 		}
 
-		size_t end = _data.find('"', ++_off);
-		if (end == std::string::npos || _off == std::string::npos)
-			return elem;
-
-		elem.name = _data.substr(_off, end - _off);
-		_off = ++end;
-		_off = _data.find_first_of("\"{[-1234567890tfn", _off);
-		if (_off == std::string::npos)
-			return elem;
-
-		if (_data[_off] == '"')
-		{// string
-			// parsing the content
-			for (end = _data.find('"', ++_off); _data[end - 1] == '\\'; end = _data.find('"', ++_off));
-			elem.value = _data.substr(_off, end - _off);
-			_off = end;
-			elem.type = JSONTypes::String;
-			return elem;
-		}
-		else if (_data[_off] == '{')
-		{// object
-			elem.children = parse(_data, _off).children;
-			elem.type = JSONTypes::Object;
-			return elem;
-		}
-		else if (_data[_off] == '[')
-		{// array
-			elem.children = parse(_data, _off).children;
-			elem.type = JSONTypes::Array;
-			return elem;
-		}
-		else if (std::string str; &(str += _data[_off]) && str.find_first_of("-1234567890") != std::string::npos)
-		{// number
-			end = _data.find_first_of(",]}", _off);
-			elem.value = _data.substr(_off, end - _off);
-			_off = end - 1;
-			if (elem.value.find('.') != std::string::npos)
-			{// Float
-				elem.type = JSONTypes::Float;
+		// object parsing
+		switch (_data[_off])
+		{
+		case '"':
+			// parse the elements name
+			elem.name = parseString(elem, _data, _off);
+			_off++;
+			AfterWhiteSpace;
+			// parse element
+			switch (_data[_off])
+			{
+			case ':':
+				elem.type = JSONTypes::String;
+				_off++;
+				AfterWhiteSpace;
+				switch (_data[_off])
+				{
+				case '{':
+				case '[':
+					while (_data[_off] != ']' && _data[_off] != '}')
+					{
+						JSONElement parseElem = parse(_data, _off);
+						if (parseElem.type == JSONTypes::Array && parseElem.name.empty())
+						{
+							elem.children = parseElem.children;
+							elem.type = JSONTypes::Array;
+						}
+						else
+						{
+							elem.children.emplace_back(parseElem);
+						}
+						elem.error = parseElem.error;
+						elem.errorLocation = parseElem.errorLocation;
+						_off++;// <-- if there ever is a bug its because of this
+						AfterWhiteSpace;
+					}
+					break;
+				default:
+					parseValue(elem, _data, _off);
+					break;
+				}
+				return elem;
+				break;
+			default:
+				// error
+				elem.error = JSONErrors::MissingColon;
+				elem.errorLocation = _off;
+				return elem;
+				break;
 			}
-			else
-				elem.type = JSONTypes::Integer;
-			return elem;
+			break;
+		default:
+			elem.error = JSONErrors::Unexpected_Character;
+			elem.errorLocation = _off;
+			break;
 		}
-		else if (_data[_off] == 't')
-		{// boolean true
-			end = _data.find_first_of(",]}", _off);
-			elem.value = _data.substr(_off, end - _off);
-			_off = end - 1;
-			elem.type = JSONTypes::Boolean;
-			return elem;
-		}
-		else if (_data[_off] == 'f')
-		{// boolean false
-			end = _data.find_first_of(",]}", _off);
-			elem.value = _data.substr(_off, end - _off);
-			_off = end - 1;
-			elem.type = JSONTypes::Boolean;
-			return elem;
-		}
-		else if (_data[_off] == 'n')
-		{// null
-			end = _data.find_first_of(",]}", _off);
-			elem.value = _data.substr(_off, end - _off);
-			_off = end - 1;
-			elem.type = JSONTypes::Null;
-			return elem;
-		}
-		throw "JSON is not formatted correctly.";
 		return elem;
 	}
 
-	JSONElement RJSON::parse(const std::string& _data, size_t& _off, std::string _name)
+	std::string RJSON::parseString(JSONElement& _elem, const std::string& _data, size_t& _off)
 	{
-		JSONElement elem;
-		_off = _data.find_first_of("[{", _off);
-		if (_off == std::string::npos)
-			return elem;
-
-		if (_data[_off] == '{')
-		{
-			elem.type = JSONTypes::Object;
-		}
-		else if (_data[_off] == '[')
-		{
-			elem.type = JSONTypes::Array;
-		}
-
-
-		for (; _off < _data.length(); _off++)
-		{
-			size_t tmp = _off;
-			tmp = _data.find_first_not_of(JSONWhitespace, ++tmp);
-			if (tmp != std::string::npos)
-				_off = tmp;
-
-			if (_data[_off] == '}' || _data[_off] == ']')
+	parseName:
+		size_t start = _off + 1;
+		_off = _data.find_first_of("\\\"", _off + 1);
+		if (_off == std::string::npos) return std::string();
+		std::string name;
+		if (_data[_off] == '\\')
+		{// control character
+			name = _data.substr(start, _off - start - 1);
+			_off++;
+			if (_off == std::string::npos) return std::string();
+			switch (_data[_off])
 			{
-				return elem;
+			case '"':
+				name += '"';
+				break;
+			case '\\':
+				name += '\\';
+				break;
+			case '/':
+				name += '/';
+				break;
+			case 'b':
+				name += '\b';
+				break;
+			case 'f':
+				name += '\f';
+				break;
+			case 'n':
+				name += '\n';
+				break;
+			case 'r':
+				name += '\r';
+				break;
+			case 't':
+				name += '\t';
+				break;
+			case 'u':
+				// skip hex parsing
+				_off += 'u';
+				break;
+			default:
+				// error
+				_elem.error = JSONErrors::UnexpectedControl_Character;
+				_elem.errorLocation = _off;
+				return std::string();
+				break;
 			}
-			if (_data[_off] == '{' || _data[_off] == '[')
-			{
-				JSONElement JE = parse(_data, _off);
-				elem.children.push_back(JE);
-				if (_data[_off + 1] == '}' || _data[_off + 1] == ']')
-				{
-					_off++;
-					return elem;
-				}
-				continue;
-			}
-			_off = _data.find('"', _off);
-			JSONElement JE = parseElement(_data, _off, elem.type);
-			
-			elem.children.push_back(JE);
-			if (_data[_off + 1] == '}' || _data[_off + 1] == ']')
-			{
-				_off++;
-				return elem;
-			}
+			_off++;
+			goto parseName;
 		}
-		return elem;
+		else
+		{
+			name = _data.substr(start, _off - start);
+		}
+
+		return name;
+	}
+
+	void RJSON::parseValue(JSONElement& _elem, const std::string& _data, size_t& _off)
+	{
+		size_t start = _off;
+		switch (_data[_off])
+		{
+		case '"':
+			_elem.value = parseString(_elem, _data, _off);
+			_elem.type = JSONTypes::String;
+			break;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			_off = _data.find_first_of(std::string(JSONWhitespace) + ",}]", _off);
+			if (_off == std::string::npos) return;
+			_elem.value = _data.substr(start, _off - start);
+
+			if (_elem.value.find('.') != std::string::npos)
+			{
+				_elem.type = JSONTypes::Float;
+				break;
+			}
+			_elem.type = JSONTypes::Integer;
+			break;
+		case 't':
+		case 'f':
+			_off = _data.find_first_of(std::string(JSONWhitespace) + ",}]", _off);
+			if (_off == std::string::npos) return;
+			_elem.value = _data.substr(start, _off - start);
+			_elem.type = JSONTypes::Boolean;
+			break;
+		case 'n':
+			_off = _data.find_first_of(std::string(JSONWhitespace) + ",}]", _off);
+			if (_off == std::string::npos) return;
+			_elem.value = _data.substr(start, _off - start);
+			_elem.type = JSONTypes::Null;
+			break;
+		default:
+			_elem.error = JSONErrors::Unexpected_Character;
+			_elem.errorLocation = _off;
+			break;
+		}
 	}
 }
 #endif // __RJSON__
