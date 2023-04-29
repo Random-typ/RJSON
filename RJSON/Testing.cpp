@@ -29,7 +29,6 @@ int main()
 	std::string JSON((std::istreambuf_iterator<char>(fs)), std::istreambuf_iterator<char>());
 	fs.close();
 	RJSON::JSONElement json = RJSON::RJSON::load(JSON);
-	auto config = json.get("config");
 	std::cout << json.asJSON(true);
 	return 0;
 

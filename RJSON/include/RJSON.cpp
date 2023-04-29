@@ -369,11 +369,11 @@ namespace RJSON
 		_indent += _whitespace;
 		if (type == JSONTypes::Array)
 		{
-			std::string front = "[\n" + _indent + asJSONInnerFormatted(_indent, _whitespace);
+			std::string front = "[\n" + asJSONInnerFormatted(_indent, _whitespace);
 			_indent.pop_back();
 			return front + _indent + "\n]";
 		}
-		std::string front = "{\n" + _indent + asJSONInnerFormatted(_indent, _whitespace);
+		std::string front = "{\n" + asJSONInnerFormatted(_indent, _whitespace);
 		_indent.pop_back();
 		return front + _indent + "\n}";
 	}
@@ -865,7 +865,7 @@ namespace RJSON
 			switch (_data[_off])
 			{
 			case ':':
-				elem.type = JSONTypes::String;
+				
 				_off++;
 				AfterWhiteSpace;
 				switch (_data[_off])
@@ -895,7 +895,6 @@ namespace RJSON
 					break;
 				}
 				return elem;
-				break;
 			default:
 				// error
 				elem.error = JSONErrors::MissingColon;
