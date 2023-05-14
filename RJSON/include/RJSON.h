@@ -118,6 +118,7 @@ if (_off == std::string::npos)\
 		JSONElement(size_t _val);
 		JSONElement(float _val);
 		JSONElement(bool _val);
+		JSONElement(const char* _name);
 		JSONElement(std::string _nameORjson);
 
 		JSONElement(std::string _name, size_t _val);
@@ -147,7 +148,8 @@ if (_off == std::string::npos)\
 		// @param _value: Value of the element
 		// @param _type: Type of the element
 		// @return JSONElement&
-		JSONElement&					addChild(std::string _name, std::string _value = "", JSONType _type = JSONTypes::Unknown);
+		JSONElement&					addChild(std::string _name, std::string _value = "", JSONType _type = JSONTypes::String);
+		JSONElement&					addChild(std::string _name, const char* _value, JSONType _type = JSONTypes::String);
 		JSONElement&					addChild(std::string _name, size_t _value);
 		JSONElement&					addChild(std::string _name, int _value);
 		JSONElement&					addChild(std::string _name, unsigned int _value);
@@ -234,7 +236,7 @@ if (_off == std::string::npos)\
 		std::string						name;
 		std::string						value;
 		JSONElementArray				children;
-		JSONType						type = JSONTypes::Unknown;
+		JSONType						type = JSONTypes::Object;
 
 
 		JSONErrors						error = JSONErrors::OK;

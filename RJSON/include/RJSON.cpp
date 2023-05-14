@@ -44,6 +44,11 @@ namespace RJSON
 		type = JSONTypes::Boolean;
 	}
 
+	JSONElement::JSONElement(const char* _name)
+		: name(_name) {
+		type = JSONTypes::Object;
+	}
+
 	JSONElement::JSONElement(std::string _name) 
 		: name(_name) {
 		type = JSONTypes::Object;
@@ -148,6 +153,15 @@ namespace RJSON
 	}
 
 	JSONElement& JSONElement::addChild(std::string _name, std::string _value, JSONType _type)
+	{
+		JSONElement elem;
+		elem.name = _name;
+		elem.value = _value;
+		elem.type = _type;
+		return addChild(elem);
+	}
+	
+	JSONElement& JSONElement::addChild(std::string _name, const char* _value, JSONType _type)
 	{
 		JSONElement elem;
 		elem.name = _name;
@@ -352,11 +366,11 @@ namespace RJSON
 		{
 			return asJSONInner();
 		}
-		if (type == JSONTypes::Array)
+		/*if (type == JSONTypes::Array)
 		{
 			return "[" + asJSONInner() + "]";
-		}
-		return "{" + asJSONInner() + "}";
+		}*/
+		return "{" +  asJSONInner() + "}";
 	}
 
 	
@@ -704,97 +718,6 @@ namespace RJSON
 		}
 		return _left;
 	}
-
-	//bool operator==(const JSONElementArrayPTR& _left, const JSONElementArrayPTR& _right)
-	//{
-	//	if (_left.size() == _right.size())
-	//	{
-	//		for (const auto elem1 : _left)
-	//		{
-	//			for (const auto elem2 : _right)
-	//			{
-	//				if (elem1 != *elem2)
-	//				{
-	//					return false;
-	//				}
-	//			}
-	//		}
-	//		return true;
-	//	}
-	//	else
-	//		return false;
-	//}
-
-	//bool operator==(const JSONElementArrayPTR& _left, const JSONElementArray& _right)
-	//{
-	//	if (_left.size() == _right.size())
-	//	{
-	//		for (const auto elem1 : _left)
-	//		{
-	//			for (const auto elem2 : _right)
-	//			{
-	//				if (elem1 != *elem2)
-	//				{
-	//					return false;
-	//				}
-	//			}
-	//		}
-	//		return true;
-	//	}
-	//	else
-	//		return false;
-	//}
-
-	//bool operator!=(const JSONElementArrayPTR& _left, const JSONElementArrayPTR& _right)
-	//{
-	//	return JSONElementArrayPTR();
-	//}
-
-	//bool operator!=(const JSONElementArrayPTR& _left, const JSONElementArray& _right)
-	//{
-	//	return JSONElementArrayPTR();
-	//}
-
-	//// friend
-	//const bool operator==(const JSONElement& _left, const JSONElement& _right)
-	//{
-	//	if (sizeof(_left) == sizeof(_right))
-	//	{
-	//		return !memcmp(&_left, &_right, sizeof(_left));
-	//	}
-	//	return false;
-	//}
-
-	//// friend
-	//const bool operator!=(const JSONElement& _left, const JSONElement& _right)
-	//{
-	//	return !(_left == _right);
-	//}
-
-	//const JSONElement operator+(const JSONElement& _left, const JSONElement& _right)
-	//{
-	//	JSONElement element;
-	//	element.children = _left.children + _right.children;
-	//	return element;
-	//}
-
-	//const JSONElement& operator+=(JSONElement& _left, const JSONElement& _right)
-	//{
-	//	_left.children += _right.children;
-	//	return _left;
-	//}
-
-
-	// Public
-	//template<typename _json>
-	//RJSON::RJSON(_json _JSONElements...)
-	//{
-	//#if _json != JSONElement
-	//	#error "RJSON::RJSON(). Can only be type JSONElement"
-	//#endif
-	//	_JSONElements.get("");
-	//}
-	
 	
 	JSONElement RJSON::load(std::string _jsonstructure)
 	{
@@ -824,6 +747,10 @@ namespace RJSON
 		case '[':
 			elem.type = JSONTypes::Array;
 			_off++;
+			break;
+		case '}':
+		case ']':
+			return elem;
 			break;
 		}
 		
@@ -871,7 +798,12 @@ namespace RJSON
 				switch (_data[_off])
 				{
 				case '{':
+					elem.type = JSONTypes::Object;
 				case '[':
+					if (_data[_off] != '{')
+					{
+						elem.type = JSONTypes::Array;
+					}
 					while (_data[_off] != ']' && _data[_off] != '}')
 					{
 						JSONElement parseElem = parse(_data, _off);
@@ -886,8 +818,20 @@ namespace RJSON
 						}
 						elem.error = parseElem.error;
 						elem.errorLocation = parseElem.errorLocation;
-						_off++;// <-- if there ever is a bug its because of this
+						if (_data[_off] == ']' || _data[_off] == '}')
+						{
+							_off++;
+							if (_data[_off] == ',')
+								_off++;
+							break;
+						}
+						_off++;
 						AfterWhiteSpace;
+						if (_data[_off] == ',')
+						{
+							_off++;
+							AfterWhiteSpace;
+						}
 					}
 					break;
 				default:
@@ -903,6 +847,9 @@ namespace RJSON
 				break;
 			}
 			break;
+		case '}':
+		case ']':
+				break;
 		default:
 			elem.error = JSONErrors::Unexpected_Character;
 			elem.errorLocation = _off;
