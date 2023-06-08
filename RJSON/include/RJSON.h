@@ -129,8 +129,8 @@ if (_off == std::string::npos)\
 
 		~JSONElement();
 
-		bool							hasError();
-		std::string						getErrorText();
+		bool							hasError() const;
+		std::string						getErrorText() const;
 
 		// Retrieves child element by it's name
 		// @param _name: Element name
@@ -153,13 +153,15 @@ if (_off == std::string::npos)\
 		JSONElement&					addChild(std::string _name, size_t _value);
 		JSONElement&					addChild(std::string _name, int _value);
 		JSONElement&					addChild(std::string _name, unsigned int _value);
-		JSONElement&					addChild(std::string _name, float _value);
+		JSONElement&					addChild(std::string _name, long long _value);
+		JSONElement&					addChild(std::string _name, double _value);
+		JSONElement&					addChild(std::string _name, long double _value);
 		JSONElement&					addChild(std::string _name, bool _value);
 		JSONElement&					addChild(std::string _name, std::vector<JSONElement> _elements);
 		JSONElement&					addChild(std::string _name, std::vector<std::string> _array);
 		JSONElement&					addChild(std::string _name, std::vector<size_t> _array);
 		JSONElement&					addChild(std::string _name, std::vector<int> _array);
-		JSONElement&					addChild(std::string _name, std::vector<float> _array);
+		JSONElement&					addChild(std::string _name, std::vector<double> _array);
 		JSONElement&					addChild(std::string _name, std::vector<bool> _array);
 
 
@@ -176,15 +178,15 @@ if (_off == std::string::npos)\
 		// Check if child exists by name
 		// @param _name: Element nae
 		// @return True when child exists false otherwise
-		const bool                      hasChild(std::string _name);
+		bool							hasChild(std::string _name) const;
 
 		// Check if this elemt exists
 		// @return True when element exists false otherwise
-		const bool						exists();
+		bool							exists() const;
 
 		// Check if element contains children
 		// @return True if element doesn't contain children
-		const bool						isEmpty();
+		bool							isEmpty() const;
 
 		// Erase this element from it's parent
 		// @return True on success
@@ -196,30 +198,34 @@ if (_off == std::string::npos)\
 
 		// Convert this element to a json string
 		// @return std::string
-		const std::string               asJSON(bool _formatted = false, std::string _whitespace = "\t");
+		std::string						asJSON(bool _formatted = false, std::string _whitespace = "\t") const;
 
 		// Get element type
 		// @return JSONType
-		const JSONType					getType();
+		JSONType						getType() const;
 
 		// Automatically set the type of this element
-		const void						autoType();
+		void							autoType();
 
 		// get the element value as int
 		// @return int
-		const int						valueAsInt();
+		long long						valueAsInt() const;
 
 		// get the element value as float
 		// @return float
-		const float						valueAsFloat();
+		long double						valueAsFloat() const;
 
 		// get the element value as string
 		// @return std::string
-		const std::string				valueAsString();
+		std::string						valueAsString() const;
 
 		// get the element value as bool
 		// @return bool
-		const bool						valueAsBool();
+		bool							valueAsBool() const;
+		// get children values as array
+		// @return std::vector<std::string>
+		std::vector<std::string>		asArray() const;
+
 
 		/*
 		friend const bool				operator==(const JSONElement& _right, const JSONElement& _left);
@@ -242,11 +248,11 @@ if (_off == std::string::npos)\
 		JSONErrors						error = JSONErrors::OK;
 		size_t							errorLocation = 0;
 	private:
-		std::string				asJSONFormatted(std::string& _indent, std::string _whitespace);
-		std::string               asJSONInnerFormatted(std::string& _indent, std::string _whitespace);
+		std::string						asJSONFormatted(std::string& _indent, std::string _whitespace) const;
+		std::string						asJSONInnerFormatted(std::string& _indent, std::string _whitespace) const;
 
-		std::string               asJSONInner();
-		std::string				rawValue();
+		std::string						asJSONInner() const;
+		std::string						rawValue() const;
 	};
 
 
