@@ -95,7 +95,9 @@ namespace RJSON {
 		OK,
 		Unexpected_Character,
 		UnexpectedControl_Character,
-		MissingColon
+		MissingColon,
+		JSONisEmpty,
+		UnhandledException
 	};
 
 	// get index to first byte after whitespace
@@ -226,6 +228,7 @@ if (_off == std::string::npos)\
 		// @return std::vector<std::string>
 		std::vector<std::string>		asArray() const;
 
+		void							fixValue();
 
 		/*
 		friend const bool				operator==(const JSONElement& _right, const JSONElement& _left);

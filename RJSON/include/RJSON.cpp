@@ -120,6 +120,12 @@ namespace RJSON
 			text = "Unexpected character at ";
 		case JSONErrors::UnexpectedControl_Character:
 			text = "Unexpected control character at ";
+		case JSONErrors::JSONisEmpty:
+			text = "JSON was empty.";
+			return text;
+		case JSONErrors::UnhandledException:
+			text = "An unhandled exception was thrown.";
+			return text;
 		default:
 			break;
 		}
@@ -457,7 +463,7 @@ namespace RJSON
 		std::string json;
 		if (!name.empty())
 		{
-			json += "\"" + name + "\": ";
+			json += "\"" + name + "\":";
 		}
 		if (type == JSONTypes::Array)
 		{
@@ -494,7 +500,7 @@ namespace RJSON
 	}
 
 	std::string JSONElement::rawValue() const
-	{
+	{// check for controlcharacters
 		switch (type)
 		{
 		case JSONTypes::String:
@@ -603,6 +609,21 @@ namespace RJSON
 			arr.emplace_back(i.value);
 		}
 		return arr;
+	}
+
+	void JSONElement::fixValue()
+	{
+		if (type != JSONTypes::String && type != JSONTypes::Unknown)
+		{
+			return;
+		}
+		//for (size_t i = value.find_first_of("\\\"/"); i < length; i++)
+		//{
+
+		//}
+
+
+
 	}
 
 	JSONElement& JSONElement::operator[](const size_t _index)
@@ -740,6 +761,13 @@ namespace RJSON
 	
 	JSONElement RJSON::load(std::string _jsonstructure)
 	{
+		if (_jsonstructure.empty())
+		{
+			JSONElement json;
+			json.error = JSONErrors::JSONisEmpty;
+			json.errorLocation = 0;
+			return json;
+		}
 		try
 		{
 			size_t pos = 0;
@@ -747,7 +775,10 @@ namespace RJSON
 		}
 		catch (const std::exception&)
 		{
-			return JSONElement();
+			JSONElement json;
+			json.error = JSONErrors::UnhandledException;
+			json.errorLocation = 0;
+			return json;
 		}
 	}
 
@@ -762,12 +793,15 @@ namespace RJSON
 		case '{':
 			_off++;
 			AfterWhiteSpace;
-			while (_data[_off] == '"' || _data[_off] == ',')
+			while (_data[_off] != '}')
 			{
 				elem.type = JSONTypes::Object;
 				JSONElement elem2 = parse(_data, _off);
 				elem.children.push_back(elem2);
-				_off++;
+				if (_data[_off] == '"')
+				{
+					_off++;
+				}
 				if (_data[_off] == ',')
 				{
 					_off++;
@@ -794,7 +828,7 @@ namespace RJSON
 		{
 			if (_data[_off] == '{' || _data[_off] == '[')
 			{
-				_off--;
+				_off;
 				elem.children.push_back(parse(_data, _off));
 				AfterWhiteSpace;
 				_off++;
@@ -851,7 +885,20 @@ namespace RJSON
 				case '{':
 					elem.type = JSONTypes::Object;
 				case '[':
-					if (_data[_off] != '{')
+					if (_data[_off] == '[')
+					{
+						elem.type = JSONTypes::Array;
+					}
+					if (_data[_off + 1] == ']')
+					{
+						_off++;
+						AfterWhiteSpace;
+						_off++;
+						break;
+					}
+					elem.children = parse(_data, _off).children;
+					_off++;
+					/*if (_data[_off] != '{')
 					{
 						elem.type = JSONTypes::Array;
 					}
@@ -883,7 +930,7 @@ namespace RJSON
 							_off++;
 							AfterWhiteSpace;
 						}
-					}
+					}*/
 					break;
 				default:
 					parseValue(elem, _data, _off);
