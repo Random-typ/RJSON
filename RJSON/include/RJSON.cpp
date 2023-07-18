@@ -49,10 +49,8 @@ namespace RJSON
 		type = JSONTypes::Object;
 	}
 
-	JSONElement::JSONElement(std::string _name) 
-		: name(_name) {
-		type = JSONTypes::Object;
-	}
+	JSONElement::JSONElement(std::string _name, JSONType _type = JSONTypes::Object)
+		: name(_name), type(_type) {}
 
 
 	JSONElement::JSONElement(std::string _name, size_t _val)
@@ -138,6 +136,8 @@ namespace RJSON
 		for (JSONElement& elem : children)
 			if (elem.name == _name)
 				return elem;
+		RJSON::EmptyElem.error = error;
+		RJSON::EmptyElem.errorLocation = errorLocation;
 		return RJSON::EmptyElem;
 	}
 
@@ -164,7 +164,8 @@ namespace RJSON
 		elem.name = _name;
 		elem.value = _value;
 		elem.type = _type;
-		return addChild(elem);
+		children.push_back(elem);
+		return children.back();
 	}
 	
 	JSONElement& JSONElement::addChild(std::string _name, const char* _value, JSONType _type)
@@ -173,7 +174,8 @@ namespace RJSON
 		elem.name = _name;
 		elem.value = _value;
 		elem.type = _type;
-		return addChild(elem);
+		children.push_back(elem);
+		return children.back();
 	}
 
 	JSONElement& JSONElement::addChild(std::string _name, size_t _value)
@@ -224,7 +226,8 @@ namespace RJSON
 			elem.children.push_back(i);
 		}
 		elem.type = JSONType::Array;
-		return addChild(elem);
+		children.push_back(elem);
+		return children.back();
 	}
 
 	JSONElement& JSONElement::addChild(std::string _name, std::vector<std::string> _array)
@@ -239,7 +242,8 @@ namespace RJSON
 			elem.children.push_back(element);
 		}
 		elem.type = JSONType::Array;
-		return addChild(elem);
+		children.push_back(elem);
+		return children.back();
 	}
 
 	JSONElement& JSONElement::addChild(std::string _name, std::vector<size_t> _array)
@@ -254,7 +258,8 @@ namespace RJSON
 			elem.children.push_back(element);
 		}
 		elem.type = JSONType::Array;
-		return addChild(elem);
+		children.push_back(elem);
+		return children.back();
 	}
 
 	JSONElement& JSONElement::addChild(std::string _name, std::vector<int> _array)
@@ -269,7 +274,8 @@ namespace RJSON
 			elem.children.push_back(element);
 		}
 		elem.type = JSONType::Array;
-		return addChild(elem);
+		children.push_back(elem);
+		return children.back();
 	}
 
 	JSONElement& JSONElement::addChild(std::string _name, std::vector<double> _array)
@@ -284,7 +290,8 @@ namespace RJSON
 			elem.children.push_back(element);
 		}
 		elem.type = JSONType::Array;
-		return addChild(elem);
+		children.push_back(elem);
+		return children.back();
 	}
 
 	JSONElement& JSONElement::addChild(std::string _name, std::vector<bool> _array)
@@ -303,13 +310,14 @@ namespace RJSON
 			elem.children.push_back(element);
 		}
 		elem.type = JSONType::Array;
-		return addChild(elem);
+		children.push_back(elem);
+		return children.back();
 	}
 
 	JSONElement& JSONElement::addChild(JSONElement _jsonElement)
 	{
 		children.push_back(_jsonElement);
-		return _jsonElement;
+		return children.back();
 	}
 
 	bool JSONElement::removeChild(std::string _name)
