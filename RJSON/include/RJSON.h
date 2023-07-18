@@ -121,7 +121,7 @@ if (_off == std::string::npos)\
 		JSONElement(float _val);
 		JSONElement(bool _val);
 		JSONElement(const char* _name);
-		JSONElement(std::string _name, JSONType _type);
+		JSONElement(std::string _name, JSONType _type = JSONTypes::Object);
 
 		JSONElement(std::string _name, size_t _val);
 		JSONElement(std::string _name, float _val);

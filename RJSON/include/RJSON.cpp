@@ -49,7 +49,7 @@ namespace RJSON
 		type = JSONTypes::Object;
 	}
 
-	JSONElement::JSONElement(std::string _name, JSONType _type = JSONTypes::Object)
+	JSONElement::JSONElement(std::string _name, JSONType _type)
 		: name(_name), type(_type) {}
 
 
