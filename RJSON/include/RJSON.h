@@ -241,6 +241,11 @@ if (_off == std::string::npos)\
 		JSONElement&					operator[](const size_t _index);
 		JSONElement&					operator[](const std::string _name);
 
+		JSONElement&					operator=(size_t _value);
+		JSONElement&					operator=(float _value);
+		JSONElement&					operator=(bool _value);
+		JSONElement&					operator=(const char* _value);
+		JSONElement&					operator=(const JSONElement& _json);
 
 		std::string						name;
 		std::string						value;

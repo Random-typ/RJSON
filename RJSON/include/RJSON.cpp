@@ -35,13 +35,13 @@ namespace RJSON
 	}
 
 	JSONElement::JSONElement(bool _val) {
+		type = JSONTypes::Boolean;
 		if (_val)
 		{
 			value = "true";
 			return;
 		}
 		value = "false";
-		type = JSONTypes::Boolean;
 	}
 
 	JSONElement::JSONElement(const char* _name)
@@ -511,8 +511,6 @@ namespace RJSON
 	{// check for controlcharacters
 		switch (type)
 		{
-		case JSONTypes::String:
-			return "\"" + value + "\"";
 		case JSONTypes::Integer:
 			return value;
 		case JSONTypes::Float:
@@ -521,8 +519,74 @@ namespace RJSON
 			return value;
 		case JSONTypes::Null:
 			return value;
-		default:// Handle like string
-			return "\"" + value + "\"";
+		case JSONTypes::String:
+		default:
+			// Handle control characters
+			std::string valueModified = value;
+			for (size_t i = 0; i < valueModified.size(); i++)
+			{
+				if (valueModified[i] == '"' || 
+					valueModified[i] == '/' ||
+					valueModified[i] == '\b' ||
+					valueModified[i] == '\f' || 
+					valueModified[i] == '\n' || 
+					valueModified[i] == '\r' || 
+					valueModified[i] == '\t'
+					// u+hex
+					)
+				{
+					switch (valueModified[i])
+					{
+					case '\b':
+						valueModified[i] = 'b';
+						break;
+					case '\f':
+						valueModified[i] = 'f';
+						break;
+					case '\n':
+						valueModified[i] = 'n';
+						break;
+					case '\r':
+						valueModified[i] = 'r';
+						break;
+					case '\t':
+						valueModified[i] = 't';
+						break;
+					}
+					valueModified.insert(valueModified.begin() + i, '\\');
+					i++;
+					continue;
+				}
+
+				if (valueModified[i] != '\\')
+				{
+					continue;
+				}
+				if (i + 1 == valueModified.size())
+				{
+					valueModified.push_back('\\');
+					break;
+				}
+				switch (valueModified[i + 1])
+				{
+				case '"':
+				case '\\':
+				case '/':
+				case 'b':
+				case 'f':
+				case 'n':
+				case 'r':
+				case 't':
+				case 'u':
+					i++;
+					break;
+				default:
+					valueModified.insert(valueModified.begin() + i, '\\');
+					i++;
+					break;
+				}
+			}
+			return "\"" + valueModified + "\"";
 		}
 	}
 
@@ -642,6 +706,51 @@ namespace RJSON
 	JSONElement& JSONElement::operator[](const std::string _name)
 	{
 		return get(_name);
+	}
+
+	JSONElement& JSONElement::operator=(size_t _value)
+	{
+		value = std::to_string(_value);
+		type = JSONTypes::Integer;
+		return *this;
+	}
+
+	JSONElement& JSONElement::operator=(float _value)
+	{
+		value = std::to_string(_value);
+		type = JSONTypes::Float;
+		return *this;
+	}
+
+	JSONElement& JSONElement::operator=(bool _value)
+	{
+		type = JSONTypes::Boolean;
+		if (_value)
+		{
+			value = "true";
+			return *this;
+		}
+		value = "false";
+		return *this;
+	}
+
+	JSONElement& JSONElement::operator=(const char* _value)
+	{
+		value = _value;
+		type = JSONTypes::String;
+		return *this;
+	}
+
+	JSONElement& JSONElement::operator=(const JSONElement& _json)
+	{
+		name = _json.name;
+		value = _json.value;
+		children = _json.children;
+		type = _json.type;
+
+		error = _json.error;
+		errorLocation = _json.errorLocation;
+		return *this;
 	}
 
 
