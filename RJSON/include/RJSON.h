@@ -96,6 +96,7 @@ namespace RJSON {
 		Unexpected_Character,
 		UnexpectedControl_Character,
 		MissingColon,
+		UnexpectedEndOfString,
 		JSONisEmpty,
 		UnhandledException
 	};
@@ -188,7 +189,7 @@ if (_off == std::string::npos)\
 
 		// Check if element contains children
 		// @return True if element doesn't contain children
-		bool							isEmpty() const;
+		bool							hasChildren() const;
 
 		// Erase this element from it's parent
 		// @return True on success

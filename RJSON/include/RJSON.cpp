@@ -118,6 +118,8 @@ namespace RJSON
 			text = "Unexpected character at ";
 		case JSONErrors::UnexpectedControl_Character:
 			text = "Unexpected control character at ";
+		case JSONErrors::UnexpectedEndOfString:
+			text = "Unexpected end of string at ";
 		case JSONErrors::JSONisEmpty:
 			text = "JSON was empty.";
 			return text;
@@ -346,9 +348,9 @@ namespace RJSON
 		return !name.empty();
 	}
 
-	bool JSONElement::isEmpty() const
+	bool JSONElement::hasChildren() const
 	{
-		return children.empty();
+		return !children.empty();
 	}
 
 	//const bool JSONElement::erase()
@@ -914,6 +916,10 @@ namespace RJSON
 			{
 				elem.type = JSONTypes::Object;
 				JSONElement elem2 = parse(_data, _off);
+				if (elem2.error != JSONErrors::OK)
+				{// error
+					return elem2;
+				}
 				elem.children.push_back(elem2);
 				if (_data[_off] == '"')
 				{
@@ -989,6 +995,10 @@ namespace RJSON
 		case '"':
 			// parse the elements name
 			elem.name = parseString(elem, _data, _off);
+			if (elem.error != JSONErrors::OK)
+			{// error in parseString()
+				return elem;
+			}
 			_off++;
 			AfterWhiteSpace;
 			// parse element
@@ -1079,13 +1089,21 @@ namespace RJSON
 	parseName:
 		size_t start = _off + 1;
 		_off = _data.find_first_of("\\\"", _off + 1);
-		if (_off == std::string::npos) return std::string();
+		if (_off == std::string::npos) {
+			_elem.error = JSONErrors::UnexpectedEndOfString;
+			_elem.errorLocation = start;
+			return std::string();
+		}
 		std::string name;
 		if (_data[_off] == '\\')
 		{// control character
 			name = _data.substr(start, _off - start - 1);
 			_off++;
-			if (_off == std::string::npos) return std::string();
+			if (_off == std::string::npos) {
+				_elem.error = JSONErrors::UnexpectedEndOfString;
+				_elem.errorLocation = start;
+				return std::string();
+			}
 			switch (_data[_off])
 			{
 			case '"':
