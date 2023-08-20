@@ -529,6 +529,7 @@ namespace RJSON
 			{
 				if (valueModified[i] == '"' || 
 					valueModified[i] == '/' ||
+					valueModified[i] == '\\' ||
 					valueModified[i] == '\b' ||
 					valueModified[i] == '\f' || 
 					valueModified[i] == '\n' || 
@@ -1086,6 +1087,7 @@ namespace RJSON
 
 	std::string RJSON::parseString(JSONElement& _elem, const std::string& _data, size_t& _off)
 	{
+		std::string name;
 	parseName:
 		size_t start = _off + 1;
 		_off = _data.find_first_of("\\\"", _off + 1);
@@ -1094,10 +1096,10 @@ namespace RJSON
 			_elem.errorLocation = start;
 			return std::string();
 		}
-		std::string name;
+		
 		if (_data[_off] == '\\')
 		{// control character
-			name = _data.substr(start, _off - start - 1);
+			name += _data.substr(start, _off - start);
 			_off++;
 			if (_off == std::string::npos) {
 				_elem.error = JSONErrors::UnexpectedEndOfString;
@@ -1139,12 +1141,10 @@ namespace RJSON
 				_elem.error = JSONErrors::UnexpectedControl_Character;
 				_elem.errorLocation = _off;
 				return std::string();
-				break;
 			}
-			_off++;
 			goto parseName;
 		}
-		else
+		else if (name.empty())
 		{
 			name = _data.substr(start, _off - start);
 		}
