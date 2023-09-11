@@ -124,11 +124,11 @@ if (_off == std::string::npos)\
 		JSONElement(const char* _name);
 		JSONElement(std::string _name, JSONType _type = JSONTypes::Object);
 
-		JSONElement(std::string _name, size_t _val);
-		JSONElement(std::string _name, float _val);
-		JSONElement(std::string _name, bool _val);
-		JSONElement(std::string _name, JSONElementArray _json, JSONType _type = JSONTypes::Object);
-		JSONElement(std::string _name, std::string _val);
+		JSONElement(const std::string& _name, size_t _val);
+		JSONElement(const std::string& _name, float _val);
+		JSONElement(const std::string& _name, bool _val);
+		JSONElement(const std::string& _name, JSONElementArray _json, JSONType _type = JSONTypes::Object);
+		JSONElement(const std::string& _name, const std::string& _val);
 
 		~JSONElement();
 
@@ -138,12 +138,17 @@ if (_off == std::string::npos)\
 		// Retrieves child element by it's name
 		// @param _name: Element name
 		// @return JSONElement&
-		JSONElement&					get(std::string _name);
+		JSONElement&					get(const std::string& _name);
+
+		// Retrieves child element by it's index
+		// @param _index: Element index
+		// @return JSONElement&
+		JSONElement&					get(size_t _index);
 		
 		// Retrieves all children and childs children by their name
 		// @param _name: Element name
 		// @return JSONElementArrayPTR
-		JSONElementArrayPTR				getAll(std::string _name);
+		JSONElementArrayPTR				getAll(const std::string& _name);
 
 
 		// Add a child to the current element
@@ -151,37 +156,37 @@ if (_off == std::string::npos)\
 		// @param _value: Value of the element
 		// @param _type: Type of the element
 		// @return JSONElement&
-		JSONElement&					addChild(std::string _name, std::string _value = "", JSONType _type = JSONTypes::String);
-		JSONElement&					addChild(std::string _name, const char* _value, JSONType _type = JSONTypes::String);
-		JSONElement&					addChild(std::string _name, size_t _value);
-		JSONElement&					addChild(std::string _name, int _value);
-		JSONElement&					addChild(std::string _name, unsigned int _value);
-		JSONElement&					addChild(std::string _name, long long _value);
-		JSONElement&					addChild(std::string _name, double _value);
-		JSONElement&					addChild(std::string _name, long double _value);
-		JSONElement&					addChild(std::string _name, bool _value);
-		JSONElement&					addChild(std::string _name, std::vector<JSONElement> _elements);
-		JSONElement&					addChild(std::string _name, std::vector<std::string> _array);
-		JSONElement&					addChild(std::string _name, std::vector<size_t> _array);
-		JSONElement&					addChild(std::string _name, std::vector<int> _array);
-		JSONElement&					addChild(std::string _name, std::vector<double> _array);
-		JSONElement&					addChild(std::string _name, std::vector<bool> _array);
+		JSONElement&					addChild(const std::string& _name, const std::string& _value = "", JSONType _type = JSONTypes::String);
+		JSONElement&					addChild(const std::string& _name, const char* _value, JSONType _type = JSONTypes::String);
+		JSONElement&					addChild(const std::string& _name, size_t _value);
+		JSONElement&					addChild(const std::string& _name, int _value);
+		JSONElement&					addChild(const std::string& _name, unsigned int _value);
+		JSONElement&					addChild(const std::string& _name, long long _value);
+		JSONElement&					addChild(const std::string& _name, double _value);
+		JSONElement&					addChild(const std::string& _name, long double _value);
+		JSONElement&					addChild(const std::string& _name, bool _value);
+		JSONElement&					addChild(const std::string& _name, const std::vector<JSONElement>& _elements);
+		JSONElement&					addChild(const std::string& _name, const std::vector<std::string>& _array);
+		JSONElement&					addChild(const std::string& _name, const std::vector<size_t>& _array);
+		JSONElement&					addChild(const std::string& _name, const std::vector<int>& _array);
+		JSONElement&					addChild(const std::string& _name, const std::vector<double>& _array);
+		JSONElement&					addChild(const std::string& _name, const std::vector<bool>& _array);
 
 
 		// Add a child to the current element
 		// @param _jsonElement: JSON Element
 		// @return JSONElement&
-		JSONElement&					addChild(JSONElement _jsonElement);
+		JSONElement&					addChild(const JSONElement& _jsonElement);
 
 		// Remove child by its name 
 		// @param _name: Element nae
 		// @return True on success false otherwise
-		bool                            removeChild(std::string _name);
+		bool                            removeChild(const std::string& _name);
 
 		// Check if child exists by name
 		// @param _name: Element nae
 		// @return True when child exists false otherwise
-		bool							hasChild(std::string _name) const;
+		bool							hasChild(const std::string& _name) const;
 
 		// Check if this elemt exists
 		// @return True when element exists false otherwise
@@ -240,7 +245,7 @@ if (_off == std::string::npos)\
 		friend const JSONElement&		operator+=(const JSONElement& _right, const JSONElement& _left);
 
 		JSONElement&					operator[](const size_t _index);
-		JSONElement&					operator[](const std::string _name);
+		JSONElement&					operator[](const std::string& _name);
 
 		JSONElement&					operator=(size_t _value);
 		JSONElement&					operator=(float _value);

@@ -53,20 +53,20 @@ namespace RJSON
 		: name(_name), type(_type) {}
 
 
-	JSONElement::JSONElement(std::string _name, size_t _val)
+	JSONElement::JSONElement(const std::string& _name, size_t _val)
 	: name(_name){
 		name = _name;
 		value = std::to_string(_val);
 		type = JSONTypes::Integer;
 	}
 
-	JSONElement::JSONElement(std::string _name, float _val) 
+	JSONElement::JSONElement(const std::string& _name, float _val) 
 	: name(_name){
 		value = std::to_string(_val);
 		type = JSONTypes::Float;
 	}
 
-	JSONElement::JSONElement(std::string _name, bool _val) 
+	JSONElement::JSONElement(const std::string& _name, bool _val) 
 		: name(_name)
 	{
 		type = JSONTypes::Boolean;
@@ -78,13 +78,13 @@ namespace RJSON
 		value = "false";
 	}
 
-	JSONElement::JSONElement(std::string _name, JSONElementArray _json, JSONType _type)
+	JSONElement::JSONElement(const std::string& _name, JSONElementArray _json, JSONType _type)
 		: name(_name), 
 		children(_json),
 		type(_type){
 	}
 
-	JSONElement::JSONElement(std::string _name, std::string _val)
+	JSONElement::JSONElement(const std::string& _name, const std::string& _val)
 		: name(_name),
 		value(_val)
 	{
@@ -133,7 +133,7 @@ namespace RJSON
 		return text;
 	}
 
-	JSONElement& JSONElement::get(std::string _name)
+	JSONElement& JSONElement::get(const std::string& _name)
 	{
 		for (JSONElement& elem : children)
 			if (elem.name == _name)
@@ -144,7 +144,7 @@ namespace RJSON
 	}
 
 
-	JSONElementArrayPTR JSONElement::getAll(std::string _name)
+	JSONElementArrayPTR JSONElement::getAll(const std::string& _name)
 	{
 		JSONElementArrayPTR elements;
 		for (size_t i = 0; i < children.size(); i++)
@@ -154,63 +154,63 @@ namespace RJSON
 				children[i].getAll(_name);
 			if (children[i].name == _name)
 			{
-				elements.push_back(&children[i]);
+				elements.emplace_back(&children[i]);
 			}
 		}
 		return elements;
 	}
 
-	JSONElement& JSONElement::addChild(std::string _name, std::string _value, JSONType _type)
+	JSONElement& JSONElement::addChild(const std::string& _name, const std::string& _value, JSONType _type)
 	{
 		JSONElement elem;
 		elem.name = _name;
 		elem.value = _value;
 		elem.type = _type;
-		children.push_back(elem);
+		children.emplace_back(elem);
 		return children.back();
 	}
 	
-	JSONElement& JSONElement::addChild(std::string _name, const char* _value, JSONType _type)
+	JSONElement& JSONElement::addChild(const std::string& _name, const char* _value, JSONType _type)
 	{
 		JSONElement elem;
 		elem.name = _name;
 		elem.value = _value;
 		elem.type = _type;
-		children.push_back(elem);
+		children.emplace_back(elem);
 		return children.back();
 	}
 
-	JSONElement& JSONElement::addChild(std::string _name, size_t _value)
+	JSONElement& JSONElement::addChild(const std::string& _name, size_t _value)
 	{
 		return addChild(_name, std::to_string(_value), JSONType::Integer);
 	}
 
-	JSONElement& JSONElement::addChild(std::string _name, int _value)
+	JSONElement& JSONElement::addChild(const std::string& _name, int _value)
 	{
 		return addChild(_name, std::to_string(_value), JSONType::Integer);
 	}
 
-	JSONElement& JSONElement::addChild(std::string _name, unsigned int _value)
+	JSONElement& JSONElement::addChild(const std::string& _name, unsigned int _value)
 	{
 		return addChild(_name, std::to_string(_value), JSONType::Integer);
 	}
 
-	JSONElement& JSONElement::addChild(std::string _name, long long _value)
+	JSONElement& JSONElement::addChild(const std::string& _name, long long _value)
 	{
 		return addChild(_name, std::to_string(_value), JSONType::Integer);
 	}
 
-	JSONElement& JSONElement::addChild(std::string _name, double _value)
+	JSONElement& JSONElement::addChild(const std::string& _name, double _value)
 	{
 		return addChild(_name, std::to_string(_value), JSONType::Float);
 	}
 	
-	JSONElement& JSONElement::addChild(std::string _name, long double _value)
+	JSONElement& JSONElement::addChild(const std::string& _name, long double _value)
 	{
 		return addChild(_name, std::to_string(_value), JSONType::Float);
 	}
 
-	JSONElement& JSONElement::addChild(std::string _name, bool _value)
+	JSONElement& JSONElement::addChild(const std::string& _name, bool _value)
 	{
 		if (_value)
 		{
@@ -219,20 +219,20 @@ namespace RJSON
 		return addChild(_name, "false", JSONType::Boolean);
 	}
 
-	JSONElement& JSONElement::addChild(std::string _name, std::vector<JSONElement> _elements)
+	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<JSONElement>& _elements)
 	{
 		JSONElement elem;
 		elem.name = _name;
 		for (auto& i : _elements)
 		{
-			elem.children.push_back(i);
+			elem.children.emplace_back(i);
 		}
 		elem.type = JSONType::Array;
-		children.push_back(elem);
+		children.emplace_back(elem);
 		return children.back();
 	}
 
-	JSONElement& JSONElement::addChild(std::string _name, std::vector<std::string> _array)
+	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<std::string>& _array)
 	{
 		JSONElement elem;
 		elem.name = _name;
@@ -241,14 +241,14 @@ namespace RJSON
 			JSONElement element;
 			element.type = JSONType::String;
 			element.value = i;
-			elem.children.push_back(element);
+			elem.children.emplace_back(element);
 		}
 		elem.type = JSONType::Array;
-		children.push_back(elem);
+		children.emplace_back(elem);
 		return children.back();
 	}
 
-	JSONElement& JSONElement::addChild(std::string _name, std::vector<size_t> _array)
+	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<size_t>& _array)
 	{
 		JSONElement elem;
 		elem.name = _name;
@@ -257,14 +257,14 @@ namespace RJSON
 			JSONElement element;
 			element.type = JSONType::Integer;
 			element.value = std::to_string(i);
-			elem.children.push_back(element);
+			elem.children.emplace_back(element);
 		}
 		elem.type = JSONType::Array;
-		children.push_back(elem);
+		children.emplace_back(elem);
 		return children.back();
 	}
 
-	JSONElement& JSONElement::addChild(std::string _name, std::vector<int> _array)
+	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<int>& _array)
 	{
 		JSONElement elem;
 		elem.name = _name;
@@ -273,14 +273,14 @@ namespace RJSON
 			JSONElement element;
 			element.type = JSONType::Integer;
 			element.value = std::to_string(i);
-			elem.children.push_back(element);
+			elem.children.emplace_back(element);
 		}
 		elem.type = JSONType::Array;
-		children.push_back(elem);
+		children.emplace_back(elem);
 		return children.back();
 	}
 
-	JSONElement& JSONElement::addChild(std::string _name, std::vector<double> _array)
+	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<double>& _array)
 	{
 		JSONElement elem;
 		elem.name = _name;
@@ -289,14 +289,14 @@ namespace RJSON
 			JSONElement element;
 			element.type = JSONType::Float;
 			element.value = std::to_string(i);
-			elem.children.push_back(element);
+			elem.children.emplace_back(element);
 		}
 		elem.type = JSONType::Array;
-		children.push_back(elem);
+		children.emplace_back(elem);
 		return children.back();
 	}
 
-	JSONElement& JSONElement::addChild(std::string _name, std::vector<bool> _array)
+	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<bool>& _array)
 	{
 		JSONElement elem;
 		elem.name = _name;
@@ -309,20 +309,20 @@ namespace RJSON
 			else
 				element.value = "false";
 			
-			elem.children.push_back(element);
+			elem.children.emplace_back(element);
 		}
 		elem.type = JSONType::Array;
-		children.push_back(elem);
+		children.emplace_back(elem);
 		return children.back();
 	}
 
-	JSONElement& JSONElement::addChild(JSONElement _jsonElement)
+	JSONElement& JSONElement::addChild(const JSONElement& _jsonElement)
 	{
-		children.push_back(_jsonElement);
+		children.emplace_back(_jsonElement);
 		return children.back();
 	}
 
-	bool JSONElement::removeChild(std::string _name)
+	bool JSONElement::removeChild(const std::string& _name)
 	{
 		for (size_t i = 0; i < children.size(); i++)
 		{
@@ -335,7 +335,7 @@ namespace RJSON
 		return false;
 	}
 
-	bool JSONElement::hasChild(std::string _name) const
+	bool JSONElement::hasChild(const std::string& _name) const
 	{
 		for (const JSONElement& elem : children)
 			if (elem.name == _name)
@@ -567,7 +567,7 @@ namespace RJSON
 				}
 				if (i + 1 == valueModified.size())
 				{
-					valueModified.push_back('\\');
+					valueModified += '\\';
 					break;
 				}
 				switch (valueModified[i + 1])
@@ -706,7 +706,7 @@ namespace RJSON
 		return children.operator[](_index);
 	}
 
-	JSONElement& JSONElement::operator[](const std::string _name)
+	JSONElement& JSONElement::operator[](const std::string& _name)
 	{
 		return get(_name);
 	}
@@ -859,7 +859,7 @@ namespace RJSON
 		elements.insert(elements.begin(), _left.begin(), _left.end());
 		for (JSONElement elem : _right)
 		{
-			elements.push_back(&elem);
+			elements.emplace_back(&elem);
 		}
 		return elements;
 	}
@@ -874,7 +874,7 @@ namespace RJSON
 	{
 		for (JSONElement elem : _right)
 		{
-			_left.push_back(&elem);
+			_left.emplace_back(&elem);
 		}
 		return _left;
 	}
@@ -921,7 +921,7 @@ namespace RJSON
 				{// error
 					return elem2;
 				}
-				elem.children.push_back(elem2);
+				elem.children.emplace_back(elem2);
 				if (_data[_off] == '"')
 				{
 					_off++;
@@ -953,7 +953,7 @@ namespace RJSON
 			if (_data[_off] == '{' || _data[_off] == '[')
 			{
 				_off;
-				elem.children.push_back(parse(_data, _off));
+				elem.children.emplace_back(parse(_data, _off));
 				AfterWhiteSpace;
 				_off++;
 				AfterWhiteSpace;
@@ -972,7 +972,7 @@ namespace RJSON
 
 			JSONElement arrElem;
 			parseValue(arrElem, _data, _off);
-			elem.children.push_back(arrElem);
+			elem.children.emplace_back(arrElem);
 			_off++;
 			AfterWhiteSpace;
 			if (_data[_off] == ',')
@@ -982,7 +982,7 @@ namespace RJSON
 			}
 			if (_data[_off] == ':')
 			{
-				elem.children.push_back(parse(_data, _off));
+				elem.children.emplace_back(parse(_data, _off));
 			}
 			if (_data[_off] == ']')
 			{
