@@ -143,6 +143,14 @@ namespace RJSON
 		return RJSON::EmptyElem;
 	}
 
+	JSONElement& JSONElement::get(size_t _index)
+	{
+		if (_index >= children.size())
+		{
+			return RJSON::EmptyElem;
+		}
+		return children[_index];
+	}
 
 	JSONElementArrayPTR JSONElement::getAll(const std::string& _name)
 	{
@@ -528,7 +536,7 @@ namespace RJSON
 			for (size_t i = 0; i < valueModified.size(); i++)
 			{
 				if (valueModified[i] == '"' || 
-					valueModified[i] == '/' ||
+					//valueModified[i] == '/' ||
 					valueModified[i] == '\\' ||
 					valueModified[i] == '\b' ||
 					valueModified[i] == '\f' || 
@@ -574,7 +582,7 @@ namespace RJSON
 				{
 				case '"':
 				case '\\':
-				case '/':
+				//case '/':
 				case 'b':
 				case 'f':
 				case 'n':
@@ -703,7 +711,7 @@ namespace RJSON
 
 	JSONElement& JSONElement::operator[](const size_t _index)
 	{
-		return children.operator[](_index);
+		return get(_index);
 	}
 
 	JSONElement& JSONElement::operator[](const std::string& _name)

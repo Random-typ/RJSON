@@ -280,7 +280,7 @@ if (_off == std::string::npos)\
 		static JSONElement				load(std::string _jsonstructure);
 
 	private:
-		static JSONElement				parseElement(const std::string& _data, size_t& _off, JSONType _type);
+		//static JSONElement				parseElement(const std::string& _data, size_t& _off, JSONType _type);
 		static JSONElement				parse(const std::string& _data, size_t& _off);
 		static std::string				parseString(JSONElement& _elem, const std::string& _data, size_t& _off);
 		static void						parseValue(JSONElement& _elem, const std::string& _data, size_t& _off);

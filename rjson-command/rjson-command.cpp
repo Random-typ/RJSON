@@ -1,7 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include "../RJSON/include/RJSON.h"
+#ifdef _DEBUG
+#pragma comment(lib, "../RJSON/lib/RJSON_d.lib")
+#else
 #pragma comment(lib, "../RJSON/lib/RJSON.lib")
+#endif // _DEBUG
+
 
 /*
 * Commands:
@@ -10,13 +15,15 @@
 *       The root element is selected when loading the file
 * 
 * 
-* -get <Element Name>        | retrieves a element by its name
-* -i/-index <index>          | retrieves a element by its index
-* -count                     | retrieves the number of children the element has
+* -get <Element Name>        | retrieves an element by its name
+* -i/-index <index>          | retrieves an element by its index
+* -count                     | returns the number of children the element has
 * -exists                    | returns 0 if the element does not exist 1 otherwise
+* -name                      | returns the name of the element
+* -value                     | returns the value of the element
 * 
 * Example
-* rjson test.json -get 
+* rjson "test.json" -get plugins -i 0 -name
 */
 
 #define checkFollowing \
@@ -48,28 +55,38 @@ int main(int argc, char* argv[])
 
     for (size_t i = 2; i < argc; i++)
     {
-        if (argv[i] == "-get")
+        if (!strcmp(argv[i], "-get"))
         {
             checkFollowing;
-            root = root.get(argv[i + 1]);
+            root = (RJSON::JSONElement)root.get(argv[i + 1]);
             i++;
         }
-        if (argv[i] == "-i" || argv[i] == "-index")
+        if (!strcmp(argv[i], "-i") || !strcmp(argv[i], "-index"))
         {
             checkFollowing;
-            root = root.get(std::stoi(argv[i + 1]));
+            root = (RJSON::JSONElement)root.get(std::stoi(argv[i + 1]));
             i++;
         }
-
-
-
-
+        if (!strcmp(argv[i], "-count"))
+        {
+            std::cout << root.children.size();
+            return 0;
+        }
+        if (!strcmp(argv[i],"-exists"))
+        {
+            std::cout << root.exists();
+            return 0;
+        }
+        if (!strcmp(argv[i],"-name"))
+        {
+            std::cout << root.name;
+            return 0;
+        }
+        if (!strcmp(argv[i],"-value"))
+        {
+            std::cout << root.value;
+            return 0;
+        }
     }
-
-
-
-
-
-    
     return 0;
 }
