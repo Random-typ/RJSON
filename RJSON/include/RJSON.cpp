@@ -353,7 +353,7 @@ namespace RJSON
 
 	bool JSONElement::exists() const
 	{
-		return !name.empty();
+		return !name.empty() || !value.empty() || !children.empty();
 	}
 
 	bool JSONElement::hasChildren() const
