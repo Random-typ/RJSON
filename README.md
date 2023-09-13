@@ -2,10 +2,13 @@
 C++ JSON parser.
 Details about the usage of the C++ library can be found [here](README_LIB_DOC.md).
 # CLI Tool
-RJSON is not only a C++ library it is also a CLI tool which can be used for very basic and advanced json queries.
+RJSON is not only a C++ library it is also a CLI tool which can be used for very basic and advanced json queries, with an easy to learn syntax.
 ## Usage
 
 The first parameter is always the path to the json file.  
+
+    rjson "example.json"
+
 When a json is loaded the selected element is the root of the json.  
 Parameters can be used to find, read and iterate over elements.
 
@@ -17,13 +20,17 @@ Example:
 In the example above, first it will be checked wether the selected element exists.  
 If it exists the block is executed. First `-get` selects the child of the selected element with the name "author".  
 Then `-value` follows which will print the value of the element selected by `-get`. The output of this could look like this:  
-<code>rjson example.json -exists ( -get author -value ) <br>
-Random Typ
-</code>
+
+    rjson example.json -i 0 -exists ( -get author -value )
+    Random Typ
+
+Note that the selected element after the block is still "author". 
+To go back to the previous element `-up` can be used, Here `-up`should be used inside the the block after `-value`.
+This way if the block wont get executed the selected element also wont change. 
 
 ## Parameters
 * ### `-get <element name>`
-  This paramater will select a child of the selected json element by its name.
+  Selects a child of the selected element by its name.
   Note that if the element does not exist an empty element will be selected.
   Use `-exists` to check if the elements exists.
 * ### `-i <index>` or `-index <index>`
@@ -34,6 +41,7 @@ Random Typ
   If format is 0 it will print the json in a compact hard to read format. If format is 1 the json is more human readble.
 * ### `-delim <delimiter>` or `-delimiter <delimiter>`
   Specifies a delimiter which is going to sit between every value that is printed.
+  this parameter should be used right after the json path.
 * ### `-up`
   Selects the parent element of the selected element. If the selected element is the root nothing will happen.
 * ### `-count`
@@ -56,9 +64,9 @@ Random Typ
   Also note that any parameter following `-iterate` will be treated like a code block. Which means that this is valid:  
   `... -iterate -value ...`
 
-# Examples
-For the following examples i will be using [this](example.json) json file.
+# Example
+For the following examples I will be using [this](example.json) json file.
 
-`rjson example.json -iterate (  )`
+`rjson example.json -delim " " -iterate ( -get author -value -up get name -value -up ) -get tags -iterate value`
 
-
+It lists the name, author and the tags of every book in the json.
