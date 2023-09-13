@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="rjson-command.cpp">
+    <ClCompile Include="rjson-cli-tool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
