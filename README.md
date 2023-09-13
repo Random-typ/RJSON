@@ -14,7 +14,8 @@ Parameters can be used to find, read and iterate over elements.
 
 ### Code Blocks
 A code block is usually encased in braces and is only executed if a criteria is met or it is iterated over.
-Code blocks dont have to be closed, however if they are not closed everything after the open brace is part of the block.
+Code blocks dont have to be closed, however if they are not closed everything after the open brace is part of the block.  
+**Also note that the braces are command line arguments which means that they have to be infixed and postfixed(unless the last character) by a space.**  
 Example:  
 `-exists ( -get author -value )`  
 In the example above, first it will be checked wether the selected element exists.  
