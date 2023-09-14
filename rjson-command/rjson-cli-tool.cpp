@@ -219,7 +219,7 @@ void iterateArgs(int argc, char* argv[], size_t _offset, RJSON::JSONElement& _el
         if (!strcmp(argv[_offset], "-json"))
         {
             checkFollowing;
-            if (argv[++_offset][0] == 1)
+            if (argv[++_offset][0] == '1')
             {
                 std::cout << _element.asJSON(true);
                 continue;
