@@ -68,6 +68,6 @@ This way if the block wont get executed the selected element also wont change.
 # Example
 For the following examples I will be using [this](example.json) json file.
 
-`rjson example.json -delim " " -iterate ( -get name -value -up get population -value -up ) -get attractions -iterate -value`
+`rjson example.json -delim " " -iterate ( -get name -value -up get population -value -up -get attractions -iterate -value )`
 
 It lists the name, population and the attractions of every city in the json.
