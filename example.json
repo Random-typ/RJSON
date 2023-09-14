@@ -1,0 +1,47 @@
+[
+  {
+    "name": "New York City",
+    "population": 8468000,
+    "attractions": [
+      "Statue Of Liberty",
+      "Central Park",
+      "Empire State Building"
+    ]
+  },
+  {
+    "name": "London",
+    "population": 8982000,
+    "attractions": [
+      "British Museum",
+      "Tower Of London",
+      "Buckingham Palace"
+    ]
+  },
+  {
+    "name": "Munich",
+    "population": 1472000,
+    "attractions": [
+      "English Garden",
+      "Nymphenburg Palace",
+      "Marienplatz"
+    ]
+  },
+  {
+    "name": "Paris",
+    "population": 2161000,
+    "attractions": [
+      "Eiffel Tower",
+      "Louvre Museum",
+      "Note Dame de Paris"
+    ]
+  },
+  {
+    "name": "Amsterdam",
+    "population": 821752,
+    "attractions": [
+      "Rijksmuseum",
+      "Van Gogh Museum",
+      "Anne Frank House"
+    ]
+  }
+]
