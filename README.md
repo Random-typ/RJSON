@@ -17,15 +17,15 @@ A code block is usually encased in braces and is only executed if a criteria is 
 Code blocks dont have to be closed, however if they are not closed everything after the open brace is part of the block.  
 **Also note that the braces are command line arguments which means that they have to be infixed and postfixed(unless the last character) by a space.**  
 Example:  
-`-exists ( -get author -value )`  
+`-exists ( -get name -value )`  
 In the example above, first it will be checked wether the selected element exists.  
-If it exists the block is executed. First `-get` selects the child of the selected element with the name "author".  
+If it exists the block is executed. First `-get` selects the child of the selected element with the name "name".  
 Then `-value` follows which will print the value of the element selected by `-get`. The output of this could look like this:  
 
-    rjson example.json -i 0 -exists ( -get author -value )
+    rjson example.json -i 0 -exists ( -get name -value )
     Random Typ
 
-Note that the selected element after the block is still "author". 
+Note that the selected element after the block is still "name". 
 To go back to the previous element `-up` can be used, Here `-up`should be used inside the the block after `-value`.
 This way if the block wont get executed the selected element also wont change. 
 
@@ -68,6 +68,6 @@ This way if the block wont get executed the selected element also wont change.
 # Example
 For the following examples I will be using [this](example.json) json file.
 
-`rjson example.json -delim " " -iterate ( -get author -value -up get name -value -up ) -get tags -iterate value`
+`rjson example.json -delim " " -iterate ( -get name -value -up get population -value -up ) -get attractions -iterate -value`
 
-It lists the name, author and the tags of every book in the json.
+It lists the name, population and the attractions of every city in the json.
