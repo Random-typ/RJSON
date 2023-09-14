@@ -34,6 +34,16 @@
 *                                     if the parameter is 0 the json will be formatted with almost no whitespace.
 * -delim/-delimiter  <delimiter>    | sets a delimiter which is printed between the returned values.
 * 
+* 
+* Modify JSON:
+* -add <name>                       | add element
+* -adds <name>                      | add element and selected it
+* -addv <value>                     | add element with value
+* -addvs <value>                    | add element with value and select it
+* -adde                             | add empty element
+* -addes                            | add empty element and select it
+* -adda                             | add array element
+*       
 * Note that in this context everything inside braces is called a "block". 
 * Blocks don't have to be closed if you want to include everything after the open brace in the block.
 * 
