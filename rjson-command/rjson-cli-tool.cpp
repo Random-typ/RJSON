@@ -14,36 +14,44 @@
 *       The first argument MUST always be the path to the json file.
 *       The root element is selected when loading the file
 * 
-* 
-* -get <Element Name>               | retrieves an element by its name and selects it
-* -i/-index <index>                 | retrieves an element by its index and selects it
-* -up                               | retrieves and selects the parent of the currently selected object.
-*                                     if the currently selected element is the root nothing will change and 
-*                                     no error will be returned.
-* -root                             | retrieves and selects the root element.
-* -check                            | checks the json for parsing errors
-* -count                            | returns the number of children the element has
-* -exists                           | returns 0 if the element does not exist 1 otherwise.
-*                                     Can be used like an if. See below.
-* -iterate                          | iterates over the children of the currently selected element.
-*                                     Can be used like a forEach. See below.
-* -name                             | returns the name of the element
-* -value                            | returns the value of the element
-* -json <format (0 or 1)>           | returns the current object converted back to json. If the 
-*                                     parameter is 1 the returned string will be formatted nicely.
-*                                     if the parameter is 0 the json will be formatted with almost no whitespace.
-* -delim/-delimiter  <delimiter>    | sets a delimiter which is printed between the returned values.
+* Command   Methods         Alias       Description
+* -get <Element Name>                   | retrieves an element by its name and selects it
+* -i/-index <index>                     | retrieves an element by its index and selects it
+* -up                                   | retrieves and selects the parent of the currently selected object.
+*                                         if the currently selected element is the root nothing will change and 
+*                                         no error will be returned.
+* -root                                 | retrieves and selects the root element.
+* -check                                | checks the json for parsing errors
+* -count                                | returns the number of children the element has
+* -exists                               | returns 0 if the element does not exist 1 otherwise.
+*                                         Can be used like an if. See below.
+* -iterate                              | iterates over the children of the currently selected element.
+*                                         Can be used like a forEach. See below.
+* -name                                 | returns the name of the element
+* -value                                | returns the value of the element
+* -json <format (0 or 1)>               | returns the current object converted back to json. If the 
+*                                         parameter is 1 the returned string will be formatted nicely.
+*                                         if the parameter is 0 the json will be formatted with almost no whitespace.
+* -delim/-delimiter  <delimiter>        | sets a delimiter which is printed between the returned values.
 * 
 * 
 * Modify JSON:
-* -add <name>                       | add element
-* -adds <name>                      | add element and selected it
-* -addv <value>                     | add element with value
-* -addvs <value>                    | add element with value and select it
-* -adde                             | add empty element
-* -addes                            | add empty element and select it
-* -adda                             | add array element
-*       
+* -add <name>                           | adds an element with the specified <name> and no value to the selected element
+* -add ( <name> <value>)                | adds an element with the specified <name> and <value> to the selected element
+* -adds ( <name> <value>)               | adds an element with the specified <name> and <value> to the selected element
+*                                         and selects it.
+* -adds <name>                          | adds an element with the specified <name> and no value to the selected element
+*                                         and selects it.
+* -addv <value>                         | adds an element with the specified <value> and no name to the selected element
+* -addvs <value>                        | adds an element with the specified <value> and no name to the selected element
+*                                         and selects it.
+* -adda                                 | adds an array element
+* -addas                                | adds an array element and select it
+* -adde                                 | adds empty element
+* -addes                                | adds empty element and select it
+* -remove <name>                        | removes element by name
+* -removes                              | removes selected element
+* 
 * Note that in this context everything inside braces is called a "block". 
 * Blocks don't have to be closed if you want to include everything after the open brace in the block.
 * 

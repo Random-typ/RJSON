@@ -18,5 +18,13 @@
     <ClCompile Include="rjson-cli-tool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RJSON_CLI_Tool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RJSON_CLI_Tool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
