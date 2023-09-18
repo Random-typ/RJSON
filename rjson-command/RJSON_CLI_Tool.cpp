@@ -1,9 +1,9 @@
 #include "RJSON_CLI_Tool.h"
 
-char* RJSON_CLI_Tool::argv[] = 0;
+char** RJSON_CLI_Tool::argv = {};
 const char* RJSON_CLI_Tool::delimiter = "";
 
-void RJSON_CLI_Tool::iterateArgs(int _argc, char* _argv[], size_t _offset, RJSON::JSONElement& _element)
+void RJSON_CLI_Tool::iterateArgs(int _argc, char** _argv, size_t _offset, RJSON::JSONElement& _element)
 {
     argv = _argv;
     
@@ -27,7 +27,7 @@ void RJSON_CLI_Tool::iterateArgs(size_t _offset, int _argc, RJSON::JSONElement& 
             }
             // skip until the block is closed
             _offset--;
-            findEndOfBlock();
+            findEndOfBlock(_argc, _offset);
         }
         if (!strcmp(argv[_offset], ")"))
         {// end of block
@@ -68,44 +68,43 @@ void RJSON_CLI_Tool::iterateArgs(size_t _offset, int _argc, RJSON::JSONElement& 
         }
         if (!strcmp(argv[_offset], "-count"))
         {
-            std::cout << _element.children.size() << delimiter;
+            count(_element);
             continue;
         }
         if (!strcmp(argv[_offset], "-exists"))
         {
-            executeBlock = element.exists();
-            if (_offset + 1 < argc && !strcmp(argv[_offset + 1], "("))
-            {
-                continue;
-            }
-            std::cout << executeBlock << delimiter;
+            exists(executeBlock, _argc, _offset, _element);
             continue;
         }
         if (!strcmp(argv[_offset], "-name"))
         {
-            std::cout << element.name << delimiter;
+            name(_argc, _offset, _element);
             continue;
         }
         if (!strcmp(argv[_offset], "-value"))
         {
-            std::cout << element.value << delimiter;
+            value(_argc, _offset, _element);
             continue;
         }
         if (!strcmp(argv[_offset], "-json"))
         {
-            checkFollowing;
-            if (argv[++_offset][0] == '1')
-            {
-                std::cout << element.asJSON(true);
-                continue;
-            }
-            std::cout << element.asJSON() << delimiter;
+            json(_argc, _offset, _element);
             continue;
         }
         if (!strcmp(argv[_offset], "-delim") || !strcmp(argv[_offset], "-delimiter"))
         {
-            checkFollowing;
-            delimiter = argv[++_offset];
+            delim(_argc, _offset);
+            continue;
+        }
+        // modify
+        if (!strcmp(argv[_offset], "-setname") || !strcmp(argv[_offset], "-sn"))
+        {
+            value(_argc, _offset, _element);
+            continue;
+        }
+        if (!strcmp(argv[_offset], "-setvalue") || !strcmp(argv[_offset], "-sv"))
+        {
+            value(_argc, _offset, _element);
             continue;
         }
     }
@@ -196,4 +195,105 @@ void RJSON_CLI_Tool::check(bool& _executeBlock, int _argc, size_t& _offset, RJSO
         return;
     }
     std::cout << _executeBlock << delimiter;
+}
+
+void RJSON_CLI_Tool::count(const RJSON::JSONElement& _element)
+{
+    std::cout << _element.children.size() << delimiter;
+}
+
+void RJSON_CLI_Tool::exists(bool& _executeBlock, int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+    _executeBlock = _element.exists();
+    if (_offset + 1 < _argc && !strcmp(argv[_offset + 1], "("))
+    {
+        return;
+    }
+    std::cout << _executeBlock << delimiter;
+}
+
+void RJSON_CLI_Tool::name(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+    if (isFollowed && argv[_offset + 1][0] != '-')
+    {// set name
+        setName(_argc, _offset, _element);
+        return;
+    }
+    std::cout << _element.name << delimiter;
+}
+
+void RJSON_CLI_Tool::value(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+    if (isFollowed && argv[_offset + 1][0] != '-')
+    {// set value
+        setValue(_argc, _offset, _element);
+        return;
+    }
+    std::cout << _element.value << delimiter;
+}
+
+void RJSON_CLI_Tool::json(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+    checkFollowing;
+    if (argv[++_offset][0] == '1')
+    {
+        std::cout << _element.asJSON(true);
+        return;
+    }
+    std::cout << _element.asJSON() << delimiter;
+}
+
+void RJSON_CLI_Tool::delim(int _argc, size_t& _offset)
+{
+    checkFollowing;
+    delimiter = argv[++_offset];
+}
+
+void RJSON_CLI_Tool::setName(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+    checkFollowing;
+    _element.name = argv[++_offset];
+}
+
+void RJSON_CLI_Tool::setValue(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+    checkFollowing;
+    _element.type = RJSON::JSONTypes::Unknown;
+    if (!strcmp(argv[++_offset], "true"))
+    {// is boolean
+        _element.type = RJSON::JSONTypes::Boolean;
+    }
+
+    if (!strcmp(argv[++_offset], "false"))
+    {// is boolean
+        _element.type = RJSON::JSONTypes::Boolean;
+    }
+
+    if (!strcmp(argv[++_offset], "null"))
+    {// is boolean
+        _element.type = RJSON::JSONTypes::Null;
+    }
+
+    if (_element.type == RJSON::JSONTypes::Unknown)
+    {
+        _element.type = RJSON::JSONTypes::Integer;
+    }
+
+    for (size_t i = 0; _element.type == RJSON::JSONTypes::Unknown; i++)
+    {
+        if (argv[++_offset][i] < '0' || argv[++_offset][i] > '9')
+        {
+            if (argv[++_offset][i] == '.')
+            {// is float
+                _element.type = RJSON::JSONTypes::Float;
+                break;
+            }
+            // is string
+            _element.type = RJSON::JSONTypes::String;
+            break;
+        }
+        // is int -> don't change type
+    }
+
+    _element.value = argv[++_offset];
 }

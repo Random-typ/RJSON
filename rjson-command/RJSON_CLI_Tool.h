@@ -12,13 +12,16 @@
 
 class RJSON_CLI_Tool
 {
+#define isFollowed _offset + 1 >= _argc
+
 #define checkFollowing \
-if (_offset + 1 >= _argc)\
+if (isFollowed)\
 {\
     std::cout << "Error: missing argument.";\
     return;\
 }
-    static void iterateArgs(int argc, char* argv[], size_t _offset, RJSON::JSONElement& _element);
+
+    static void iterateArgs(int argc, char** argv, size_t _offset, RJSON::JSONElement& _element);
     static void iterateArgs(size_t _offset, int _argc, RJSON::JSONElement& element, std::vector<RJSON::JSONElement>& pastSelected);
 
     static void findEndOfBlock(int _argc, size_t _offset);
@@ -29,8 +32,18 @@ if (_offset + 1 >= _argc)\
     static void up(RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected);
     static void root(RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected);
     static void check(bool& _executeBlock, int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected);
+    static void count(const RJSON::JSONElement& _element);
+    static void exists(bool& _executeBlock, int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void name(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void value(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void json(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void delim(int _argc, size_t& _offset);
 
-    static char* argv[];
+    static void setName(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void setValue(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+
+
+    static char** argv;
     static const char* delimiter;
 };
 
