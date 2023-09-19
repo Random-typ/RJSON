@@ -36,13 +36,18 @@
 * 
 * 
 * Modify JSON:
+* -setname                        -sn   | sets the name for the current element
+* -setvalue                       -sv   | sets the value for the current element
 * -add <name>                     -a    | adds an element with the specified <name> and no value to the selected element
 * -add ( <name> <value>... )      -a    | adds one ore more elements with their specified <name> and <value> to the selected element
 * -adds <name>                    -as   | adds an element with the specified <name> and no value to the selected element
 *                                         and selects it.
 * -adds ( <name> <value>... )     -as   | adds one ore more elements with their specified <name> and <value> to the selected element
 *                                         and selects it.
+* -addn <value>                   -av   | adds an element with the specified <name> and no name to the selected element
+* -addn ( <value>... )            -av   | adds one or more elements with their specified <name> and no name to the selected element
 * -addv <value>                   -av   | adds an element with the specified <value> and no name to the selected element
+* -addv ( <value>... )            -av   | adds one or more elements with their specified <name> and no name to the selected element
 * -addvs <value>                  -avs  | adds an element with the specified <value> and no name to the selected element
 *                                         and selects it.
 * -adda                           -aa   | adds an array element
@@ -52,7 +57,9 @@
 * -adde                           -ae   | adds empty element
 * -addes                          -aes  | adds empty element and select it
 * -remove <name>                  -r    | removes element by name
-* -removes                        -rs   | removes selected element
+* -removes                        -rs   | removes selected element and selects the parent
+* -clear                                | removes all children of the current element
+* 
 * 
 * Note that in this context everything inside braces is called a "block". 
 * Blocks don't have to be closed if you want to include everything after the open brace in the block.

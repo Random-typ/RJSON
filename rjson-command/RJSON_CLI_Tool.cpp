@@ -41,12 +41,12 @@ void RJSON_CLI_Tool::iterateArgs(size_t _offset, int _argc, RJSON::JSONElement& 
             get(_argc, _offset, _element, _pastSelected);
             continue;
         }
-        if (!strcmp(argv[_offset], "-i") || !strcmp(argv[_offset], "-index"))
+        if (!strcmp(argv[_offset], "-index") || !strcmp(argv[_offset], "-i"))
         {
             index(_argc, _offset, _element, _pastSelected);
             continue;
         }
-        if (!strcmp(argv[_offset], "-iterate"))
+        if (!strcmp(argv[_offset], "-iterate") || !strcmp(argv[_offset], "-it"))
         {
             iterate(_argc, _offset, _element, _pastSelected);
             continue;
@@ -56,37 +56,37 @@ void RJSON_CLI_Tool::iterateArgs(size_t _offset, int _argc, RJSON::JSONElement& 
             up(_element, _pastSelected);
             continue;
         }
-        if (!strcmp(argv[_offset], "-root"))
+        if (!strcmp(argv[_offset], "-root") || !strcmp(argv[_offset], "-rt"))
         {
             root(_element, _pastSelected);
             continue;
         }
-        if (!strcmp(argv[_offset], "-check"))
+        if (!strcmp(argv[_offset], "-check") || !strcmp(argv[_offset], "-ch"))
         {
             check(executeBlock, _argc, _offset, _element, _pastSelected);
             continue;
         }
-        if (!strcmp(argv[_offset], "-count"))
+        if (!strcmp(argv[_offset], "-count") || !strcmp(argv[_offset], "-c"))
         {
             count(_element);
             continue;
         }
-        if (!strcmp(argv[_offset], "-exists"))
+        if (!strcmp(argv[_offset], "-exists") || !strcmp(argv[_offset], "-e"))
         {
             exists(executeBlock, _argc, _offset, _element);
             continue;
         }
-        if (!strcmp(argv[_offset], "-name"))
+        if (!strcmp(argv[_offset], "-name") || !strcmp(argv[_offset], "-n"))
         {
             name(_argc, _offset, _element);
             continue;
         }
-        if (!strcmp(argv[_offset], "-value"))
+        if (!strcmp(argv[_offset], "-value") || !strcmp(argv[_offset], "-v"))
         {
             value(_argc, _offset, _element);
             continue;
         }
-        if (!strcmp(argv[_offset], "-json"))
+        if (!strcmp(argv[_offset], "-json") || !strcmp(argv[_offset], "-j"))
         {
             json(_argc, _offset, _element);
             continue;
@@ -107,6 +107,62 @@ void RJSON_CLI_Tool::iterateArgs(size_t _offset, int _argc, RJSON::JSONElement& 
             value(_argc, _offset, _element);
             continue;
         }
+        if (!strcmp(argv[_offset], "-add") || !strcmp(argv[_offset], "-a"))
+        {
+            add(_argc, _offset, _element);
+            continue;
+        }
+        if (!strcmp(argv[_offset], "-adds") || !strcmp(argv[_offset], "-as"))
+        {
+            adds(_argc, _offset, _element);
+            continue;
+        }
+        if (!strcmp(argv[_offset], "-addn") || !strcmp(argv[_offset], "-an"))
+        {
+            addn(_argc, _offset, _element);
+            continue;
+        }
+        if (!strcmp(argv[_offset], "-addv") || !strcmp(argv[_offset], "-av"))
+        {
+            addv(_argc, _offset, _element);
+            continue;
+        }
+        if (!strcmp(argv[_offset], "-adda") || !strcmp(argv[_offset], "-aa"))
+        {
+            adda(_argc, _offset, _element);
+            continue;
+        }
+        if (!strcmp(argv[_offset], "-addas") || !strcmp(argv[_offset], "-aas"))
+        {
+            addas(_argc, _offset, _element);
+            continue;
+        }
+        if (!strcmp(argv[_offset], "-adde") || !strcmp(argv[_offset], "-ae"))
+        {
+            adde(_argc, _offset, _element);
+            continue;
+        }
+        if (!strcmp(argv[_offset], "-addes") || !strcmp(argv[_offset], "-aes"))
+        {
+            addes(_argc, _offset, _element);
+            continue;
+        }
+        if (!strcmp(argv[_offset], "-remove") || !strcmp(argv[_offset], "-r"))
+        {
+            remove(_argc, _offset, _element);
+            continue;
+        }
+        if (!strcmp(argv[_offset], "-removes") || !strcmp(argv[_offset], "-rs"))
+        {
+            removes(_argc, _offset, _element);
+            continue;
+        }
+        if (!strcmp(argv[_offset], "-clear"))
+        {
+            clear(_element);
+            continue;
+        }
+
     }
 }
 
@@ -296,4 +352,51 @@ void RJSON_CLI_Tool::setValue(int _argc, size_t& _offset, RJSON::JSONElement& _e
     }
 
     _element.value = argv[++_offset];
+}
+
+void RJSON_CLI_Tool::add(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+
+}
+
+void RJSON_CLI_Tool::adds(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+}
+
+void RJSON_CLI_Tool::addn(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+}
+
+void RJSON_CLI_Tool::addv(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+}
+
+void RJSON_CLI_Tool::adda(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+}
+
+void RJSON_CLI_Tool::addas(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+}
+
+void RJSON_CLI_Tool::adde(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+}
+
+void RJSON_CLI_Tool::addes(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+}
+
+void RJSON_CLI_Tool::remove(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+}
+
+void RJSON_CLI_Tool::removes(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+{
+    ;
+}
+
+void RJSON_CLI_Tool::clear(RJSON::JSONElement& _element)
+{
+    _element.children.clear();
 }

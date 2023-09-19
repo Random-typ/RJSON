@@ -41,6 +41,17 @@ if (isFollowed)\
 
     static void setName(int _argc, size_t& _offset, RJSON::JSONElement& _element);
     static void setValue(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void add(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void adds(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void addn(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void addv(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void adda(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void addas(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void adde(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void addes(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void remove(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void removes(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void clear(RJSON::JSONElement& _element);
 
 
     static char** argv;
