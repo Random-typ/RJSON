@@ -199,6 +199,39 @@ void RJSON_CLI_Tool::findEndOfBlock(int _argc, size_t _offset)
     }
 }
 
+RJSON::JSONType RJSON_CLI_Tool::getValueType(const char* _value)
+{
+    return RJSON::JSONTypes::Unknown;
+    if (!strcmp(_value, "true"))
+    {// is boolean
+        return RJSON::JSONTypes::Boolean;
+    }
+
+    if (!strcmp(_value, "false"))
+    {// is boolean
+        return RJSON::JSONTypes::Boolean;
+    }
+
+    if (!strcmp(_value, "null"))
+    {// is boolean
+        return RJSON::JSONTypes::Null;
+    }
+
+    for (size_t i = 0; ; i++)
+    {
+        if (_value[i] < '0' || _value[i] > '9')
+        {// not a number
+            if (_value[i] == '.')
+            {// is float
+                return RJSON::JSONTypes::Float;
+            }
+            // is string
+            return RJSON::JSONTypes::String;
+        }
+    }
+    return RJSON::JSONTypes::Integer;
+}
+
 void RJSON_CLI_Tool::get(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected)
 {
     checkFollowing;
@@ -314,69 +347,130 @@ void RJSON_CLI_Tool::setName(int _argc, size_t& _offset, RJSON::JSONElement& _el
 void RJSON_CLI_Tool::setValue(int _argc, size_t& _offset, RJSON::JSONElement& _element)
 {
     checkFollowing;
-    _element.type = RJSON::JSONTypes::Unknown;
-    if (!strcmp(argv[++_offset], "true"))
-    {// is boolean
-        _element.type = RJSON::JSONTypes::Boolean;
-    }
-
-    if (!strcmp(argv[++_offset], "false"))
-    {// is boolean
-        _element.type = RJSON::JSONTypes::Boolean;
-    }
-
-    if (!strcmp(argv[++_offset], "null"))
-    {// is boolean
-        _element.type = RJSON::JSONTypes::Null;
-    }
-
-    if (_element.type == RJSON::JSONTypes::Unknown)
-    {
-        _element.type = RJSON::JSONTypes::Integer;
-    }
-
-    for (size_t i = 0; _element.type == RJSON::JSONTypes::Unknown; i++)
-    {
-        if (argv[++_offset][i] < '0' || argv[++_offset][i] > '9')
-        {
-            if (argv[++_offset][i] == '.')
-            {// is float
-                _element.type = RJSON::JSONTypes::Float;
-                break;
-            }
-            // is string
-            _element.type = RJSON::JSONTypes::String;
-            break;
-        }
-        // is int -> don't change type
-    }
+    _element.type = getValueType(argv[_offset + 1]);
 
     _element.value = argv[++_offset];
 }
 
 void RJSON_CLI_Tool::add(int _argc, size_t& _offset, RJSON::JSONElement& _element)
 {
-
+    checkFollowing;
+    if (hasCodeBlock)
+    {
+        size_t start = _offset + 1;
+        findEndOfBlock(_argc, _offset);
+        const char* name;
+        for (bool first = true ; start < _offset; start++)
+        {
+            if (first)
+            {
+                // name
+                name = argv[start];
+                if (start + 1 == _offset)
+                {
+                    _element.addChild(std::string(name));
+                    break;
+                }
+                first = false;
+                continue;
+            }
+            // value
+            _element.addChild(std::string(name), argv[start]);
+        }
+        return;
+    }
+    _element.addChild(std::string(argv[++_offset]));
 }
 
-void RJSON_CLI_Tool::adds(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+void RJSON_CLI_Tool::adds(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected)
 {
+    add(_argc, _offset, _element);
+    // select added element
+    _pastSelected.emplace_back(_element);
+    _element = _element.children.back();
 }
 
 void RJSON_CLI_Tool::addn(int _argc, size_t& _offset, RJSON::JSONElement& _element)
 {
+    checkFollowing;
+    if (hasCodeBlock)
+    {
+        size_t start = _offset + 1;
+        findEndOfBlock(_argc, _offset);
+        const char* name;
+        for (bool first = true; start < _offset; start++)
+        {
+            _element.addChild(std::string(name));
+        }
+        return;
+    }
+    _element.addChild(std::string(argv[++_offset]));
+}
+
+void RJSON_CLI_Tool::addns(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected)
+{
+    addn(_argc, _offset, _element);
+    // select added element
+    _pastSelected.emplace_back(_element);
+    _element = _element.children.back();
 }
 
 void RJSON_CLI_Tool::addv(int _argc, size_t& _offset, RJSON::JSONElement& _element)
 {
+    checkFollowing;
+    if (hasCodeBlock)
+    {
+        size_t start = _offset + 1;
+        findEndOfBlock(_argc, _offset);
+        const char* name;
+        for (bool first = true; start < _offset; start++)
+        {
+            _element.addChild("", name);
+        }
+        return;
+    }
+    _element.addChild(std::string(argv[++_offset]));
+}
+
+void RJSON_CLI_Tool::addvs(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected)
+{
+    addv(_argc, _offset, _element);
+    // select added element
+    _pastSelected.emplace_back(_element);
+    _element = _element.children.back();
 }
 
 void RJSON_CLI_Tool::adda(int _argc, size_t& _offset, RJSON::JSONElement& _element)
 {
+    checkFollowing;
+    if (hasCodeBlock)
+    {
+        size_t start = _offset + 1;
+        findEndOfBlock(_argc, _offset);
+        const char* name;
+        
+        std::vector<RJSON::JSONElement> values;
+        RJSON::JSONType type = getValueType(argv[start]);
+        for (bool first = true; start < _offset; start++)
+        {
+            if (type != getValueType(argv[start]) && type != RJSON::JSONTypes::String)
+            {
+                type = RJSON::JSONTypes::String;
+            }
+            values.emplace_back("", argv[start]);
+        }
+        _element.addChild("", values);
+        return;
+    }
+    _element.addChild("", "", RJSON::JSONTypes::Array);
 }
 
-void RJSON_CLI_Tool::addas(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+void RJSON_CLI_Tool::addas(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected)
 {
+    adda(_argc, _offset, _element);
+    // select added element
+    _pastSelected.emplace_back(_element);
+    _element = _element.children.back();
 }
 
 void RJSON_CLI_Tool::adde(int _argc, size_t& _offset, RJSON::JSONElement& _element)
@@ -387,11 +481,11 @@ void RJSON_CLI_Tool::addes(int _argc, size_t& _offset, RJSON::JSONElement& _elem
 {
 }
 
-void RJSON_CLI_Tool::remove(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+void RJSON_CLI_Tool::remove(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected)
 {
 }
 
-void RJSON_CLI_Tool::removes(int _argc, size_t& _offset, RJSON::JSONElement& _element)
+void RJSON_CLI_Tool::removes(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected)
 {
     ;
 }

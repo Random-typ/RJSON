@@ -43,11 +43,15 @@
 * -adds <name>                    -as   | adds an element with the specified <name> and no value to the selected element
 *                                         and selects it.
 * -adds ( <name> <value>... )     -as   | adds one ore more elements with their specified <name> and <value> to the selected element
-*                                         and selects it.
-* -addn <value>                   -av   | adds an element with the specified <name> and no name to the selected element
-* -addn ( <value>... )            -av   | adds one or more elements with their specified <name> and no name to the selected element
+*                                         and selects the last element that was added.
+* -addn <name>                    -av   | adds an element with the specified <name> and no value to the selected element
+* -addn ( <name>... )             -av   | adds one or more elements with their specified <name> and no name to the selected element
+* -addns <name>                   -av   | adds an element with the specified <name> and no value to the selected element 
+*                                         and selects it
+* -addns ( <name>... )            -av   | adds one or more elements with their specified <name> and no name to the selected element 
+*                                         and selects the last element that was added.
 * -addv <value>                   -av   | adds an element with the specified <value> and no name to the selected element
-* -addv ( <value>... )            -av   | adds one or more elements with their specified <name> and no name to the selected element
+* -addv ( <value>... )            -av   | adds one or more elements with their specified <value> and no name to the selected element
 * -addvs <value>                  -avs  | adds an element with the specified <value> and no name to the selected element
 *                                         and selects it.
 * -adda                           -aa   | adds an array element

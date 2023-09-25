@@ -12,19 +12,23 @@
 
 class RJSON_CLI_Tool
 {
+
+#define hasCodeBlock (_offset + 1 < _argc && !strcmp(argv[_offset + 1], "("))
+
 #define isFollowed _offset + 1 >= _argc
 
 #define checkFollowing \
 if (isFollowed)\
 {\
     std::cout << "Error: missing argument.";\
-    return;\
+    exit(0);\
 }
 
     static void iterateArgs(int argc, char** argv, size_t _offset, RJSON::JSONElement& _element);
     static void iterateArgs(size_t _offset, int _argc, RJSON::JSONElement& element, std::vector<RJSON::JSONElement>& pastSelected);
 
     static void findEndOfBlock(int _argc, size_t _offset);
+    static RJSON::JSONType getValueType(const char* _value);
 
     static void get(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected);
     static void index(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected);
@@ -42,15 +46,17 @@ if (isFollowed)\
     static void setName(int _argc, size_t& _offset, RJSON::JSONElement& _element);
     static void setValue(int _argc, size_t& _offset, RJSON::JSONElement& _element);
     static void add(int _argc, size_t& _offset, RJSON::JSONElement& _element);
-    static void adds(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void adds(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected);
     static void addn(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void addns(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected);
     static void addv(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void addvs(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected);
     static void adda(int _argc, size_t& _offset, RJSON::JSONElement& _element);
-    static void addas(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void addas(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected);
     static void adde(int _argc, size_t& _offset, RJSON::JSONElement& _element);
     static void addes(int _argc, size_t& _offset, RJSON::JSONElement& _element);
-    static void remove(int _argc, size_t& _offset, RJSON::JSONElement& _element);
-    static void removes(int _argc, size_t& _offset, RJSON::JSONElement& _element);
+    static void remove(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected);
+    static void removes(int _argc, size_t& _offset, RJSON::JSONElement& _element, std::vector<RJSON::JSONElement>& _pastSelected);
     static void clear(RJSON::JSONElement& _element);
 
 
