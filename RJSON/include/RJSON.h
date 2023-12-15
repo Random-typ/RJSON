@@ -133,6 +133,7 @@ if (_off == std::string::npos)\
 
 		~JSONElement();
 
+		void							copyError(const JSONElement& _elem);
 		bool							hasError() const;
 		std::string						getErrorText() const;
 

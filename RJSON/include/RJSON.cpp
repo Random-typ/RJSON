@@ -97,6 +97,12 @@ namespace RJSON
 	}
 
 
+	void JSONElement::copyError(const JSONElement& _elem)
+	{
+		error = _elem.error;
+		errorLocation = _elem.errorLocation;
+	}
+
 	bool JSONElement::hasError() const
 	{
 		return error != JSONErrors::OK;
@@ -915,10 +921,6 @@ namespace RJSON
 	JSONElement RJSON::parse(const std::string& _data, size_t& _off)
 	{
 		JSONElement elem;
-		if (error != JSONErrors::OK)
-		{// error
-			return elem;
-		}
 		AfterWhiteSpace;
 
 		switch (_data[_off])
@@ -929,12 +931,13 @@ namespace RJSON
 			while (_data[_off] != '}')
 			{
 				elem.type = JSONTypes::Object;
-				JSONElement elem2 = parse(_data, _off);
-				if (elem2.error != JSONErrors::OK)
+				elem.children.emplace_back(parse(_data, _off));
+				if (elem.children.back().hasError())
 				{// error
-					return elem2;
+					elem.copyError(elem.children.back());
+					return elem;
 				}
-				elem.children.emplace_back(elem2);
+				
 				if (_data[_off] == '"')
 				{
 					_off++;
@@ -967,6 +970,11 @@ namespace RJSON
 			{
 				_off;
 				elem.children.emplace_back(parse(_data, _off));
+				if (elem.children.back().hasError())
+				{
+					elem.copyError(elem.children.back());
+					return elem;
+				}
 				AfterWhiteSpace;
 				_off++;
 				AfterWhiteSpace;
@@ -986,6 +994,11 @@ namespace RJSON
 			JSONElement arrElem;
 			parseValue(arrElem, _data, _off);
 			elem.children.emplace_back(arrElem);
+			if (elem.children.back().hasError())
+			{// error
+				elem.copyError(elem.children.back());
+				return elem;
+			}
 			_off++;
 			AfterWhiteSpace;
 			if (_data[_off] == ',')
@@ -996,6 +1009,11 @@ namespace RJSON
 			if (_data[_off] == ':')
 			{
 				elem.children.emplace_back(parse(_data, _off));
+				if (elem.children.back().hasError())
+				{// error
+					elem.copyError(elem.children.back());
+					return elem;
+				}
 			}
 			if (_data[_off] == ']')
 			{
@@ -1009,8 +1027,8 @@ namespace RJSON
 		case '"':
 			// parse the elements name
 			elem.name = parseString(elem, _data, _off);
-			if (elem.error != JSONErrors::OK)
-			{// error in parseString()
+			if (elem.hasError())
+			{// error
 				return elem;
 			}
 			_off++;
@@ -1025,6 +1043,7 @@ namespace RJSON
 				{
 				case '{':
 					elem.type = JSONTypes::Object;
+					/*fallthrough*/
 				case '[':
 					if (_data[_off] == '[')
 					{
@@ -1039,39 +1058,6 @@ namespace RJSON
 					}
 					elem.children = parse(_data, _off).children;
 					_off++;
-					/*if (_data[_off] != '{')
-					{
-						elem.type = JSONTypes::Array;
-					}
-					while (_data[_off] != ']' && _data[_off] != '}')
-					{
-						JSONElement parseElem = parse(_data, _off);
-						if (parseElem.type == JSONTypes::Array && parseElem.name.empty())
-						{
-							elem.children = parseElem.children;
-							elem.type = JSONTypes::Array;
-						}
-						else
-						{
-							elem.children.emplace_back(parseElem);
-						}
-						elem.error = parseElem.error;
-						elem.errorLocation = parseElem.errorLocation;
-						if (_data[_off] == ']' || _data[_off] == '}')
-						{
-							_off++;
-							if (_data[_off] == ',')
-								_off++;
-							break;
-						}
-						_off++;
-						AfterWhiteSpace;
-						if (_data[_off] == ',')
-						{
-							_off++;
-							AfterWhiteSpace;
-						}
-					}*/
 					break;
 				default:
 					parseValue(elem, _data, _off);
@@ -1186,6 +1172,7 @@ namespace RJSON
 		case '9':
 			_off = _data.find_first_of(std::string(JSONWhitespace) + ",}]", _off);
 			if (_off == std::string::npos) {
+				_elem.errorLocation = _off;
 				_elem.error = JSONErrors::UnexpectedEndOfString;
 				return;
 			}
