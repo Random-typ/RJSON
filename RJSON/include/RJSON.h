@@ -97,6 +97,7 @@ namespace RJSON {
 		UnexpectedControl_Character,
 		MissingColon,
 		UnexpectedEndOfString,
+		UnexpectedEndOfObject,
 		JSONisEmpty,
 		UnhandledException
 	};

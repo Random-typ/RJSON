@@ -99,11 +99,7 @@ namespace RJSON
 
 	bool JSONElement::hasError() const
 	{
-		if (error == JSONErrors::OK)
-		{
-			return false;
-		}
-		return true;
+		return error != JSONErrors::OK;
 	}
 	std::string JSONElement::getErrorText() const
 	{
@@ -114,20 +110,25 @@ namespace RJSON
 			return text;
 		case JSONErrors::MissingColon:
 			text = "Colon missing at ";
+			break;
 		case JSONErrors::Unexpected_Character:
 			text = "Unexpected character at ";
+			break;
 		case JSONErrors::UnexpectedControl_Character:
 			text = "Unexpected control character at ";
+			break;
 		case JSONErrors::UnexpectedEndOfString:
 			text = "Unexpected end of string at ";
+			break;
+		case JSONErrors::UnexpectedEndOfObject:
+			text = "Unexpected end of object at ";
+			break;
 		case JSONErrors::JSONisEmpty:
 			text = "JSON was empty.";
 			return text;
 		case JSONErrors::UnhandledException:
 			text = "An unhandled exception was thrown.";
 			return text;
-		default:
-			break;
 		}
 		text += std::to_string(errorLocation) + ".";
 		return text;
@@ -914,6 +915,10 @@ namespace RJSON
 	JSONElement RJSON::parse(const std::string& _data, size_t& _off)
 	{
 		JSONElement elem;
+		if (error != JSONErrors::OK)
+		{// error
+			return elem;
+		}
 		AfterWhiteSpace;
 
 		switch (_data[_off])
@@ -1180,7 +1185,10 @@ namespace RJSON
 		case '8':
 		case '9':
 			_off = _data.find_first_of(std::string(JSONWhitespace) + ",}]", _off);
-			if (_off == std::string::npos) return;
+			if (_off == std::string::npos) {
+				_elem.error = JSONErrors::UnexpectedEndOfString;
+				return;
+			}
 			_elem.value = _data.substr(start, _off - start);
 
 			if (_elem.value.find('.') != std::string::npos)
