@@ -4,9 +4,41 @@
 #include <iostream>
 #include <fstream>
 
+class JSONType {
+public:
+	JSONType(const char* _str);
+	JSONType(std::string _str);
+	JSONType(int _num);
+	JSONType(size_t _num);
+	JSONType(long double _dbl);
+	JSONType(bool _dbl);
+};
+
+
+class test {
+public:
+	template<class... Args>
+	test(Args... arg) {
+		std::vector<JSONType> elements{ arg... };
+	}
+
+};
 
 int main()
 {
+	std::vector<JSONType> elements{
+		"name: 10",
+		"array:", {
+			"value1"
+		}
+	};
+	test t{
+		"name", (size_t)10
+	};
+
+
+
+
 	//RJSON::JSONElement json(
 	//	RJSON::JSONElement("root"),
 	//	RJSON::JSONElement("root"),
@@ -32,7 +64,4 @@ int main()
 	RJSON::JSONElement json = RJSON::RJSON::load(JSON);
 	std::cout << json.asJSON(true);
 	return 0;
-
-	{
-	}
 }

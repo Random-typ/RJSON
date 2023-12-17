@@ -49,6 +49,10 @@ namespace RJSON
 		type = JSONTypes::Object;
 	}
 
+	JSONElement::JSONElement(const JSONElementArray& _elements) : children(_elements) {
+		type = JSONTypes::Object;
+	}
+
 	JSONElement::JSONElement(std::string _name, JSONType _type)
 		: name(_name), type(_type) {}
 
@@ -928,7 +932,7 @@ namespace RJSON
 		case '{':
 			_off++;
 			AfterWhiteSpace;
-			while (_data[_off] != '}')
+			while (_data[_off] != '}' && _data[_off] != ']')
 			{
 				elem.type = JSONTypes::Object;
 				elem.children.emplace_back(parse(_data, _off));
