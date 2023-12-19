@@ -239,6 +239,14 @@ if (_off == std::string::npos)\
 
 		void							fixValue();
 
+		bool							isInteger();
+		bool							isFloat();
+		bool							isString();
+		bool							isBool();
+		bool							isNull();
+		bool							isObject();
+		bool							isArray();
+
 		/*
 		friend const bool				operator==(const JSONElement& _right, const JSONElement& _left);
 		friend const bool				operator!=(const JSONElement& _right, const JSONElement& _left);

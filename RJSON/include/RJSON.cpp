@@ -240,15 +240,11 @@ namespace RJSON
 
 	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<JSONElement>& _elements)
 	{
-		JSONElement elem;
-		elem.name = _name;
-		for (auto& i : _elements)
-		{
-			elem.children.emplace_back(i);
-		}
+		JSONElement elem(_name);
+		elem.children = _elements;
 		elem.type = JSONType::Array;
 		children.emplace_back(elem);
-		return children.back();
+		return elem;
 	}
 
 	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<std::string>& _array)
@@ -718,6 +714,41 @@ namespace RJSON
 
 
 
+	}
+
+	bool JSONElement::isInteger()
+	{
+		return type == JSONTypes::Integer;
+	}
+
+	bool JSONElement::isFloat()
+	{
+		return type == JSONTypes::Float;
+	}
+
+	bool JSONElement::isString()
+	{
+		return type == JSONTypes::String;
+	}
+
+	bool JSONElement::isBool()
+	{
+		return type == JSONTypes::Boolean;
+	}
+
+	bool JSONElement::isNull()
+	{
+		return type == JSONTypes::Null;
+	}
+
+	bool JSONElement::isObject()
+	{
+		return type == JSONTypes::Object;
+	}
+
+	bool JSONElement::isArray()
+	{
+		return false;
 	}
 
 	JSONElement& JSONElement::operator[](const size_t _index)
