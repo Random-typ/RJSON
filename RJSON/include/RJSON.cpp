@@ -929,9 +929,9 @@ namespace RJSON
 		return _left;
 	}
 	
-	JSONElement RJSON::load(std::string _jsonstructure)
+	JSONElement RJSON::load(const std::string& _jsonStructure)
 	{
-		if (_jsonstructure.empty())
+		if (_jsonStructure.empty())
 		{
 			JSONElement json;
 			json.error = JSONErrors::JSONisEmpty;
@@ -941,7 +941,7 @@ namespace RJSON
 		try
 		{
 			size_t pos = 0;
-			return parse(_jsonstructure, pos);
+			return parse(_jsonStructure, pos);
 		}
 		catch (const std::exception&)
 		{
@@ -952,8 +952,294 @@ namespace RJSON
 		}
 	}
 
+	JSONElement RJSON::loadFile(const std::wstring& _path)
+	{
+		std::wfstream fs(_path);
+		if (!fs.is_open())
+		{
+			JSONElement json;
+			json.error = JSONErrors::FailedToOpenFile;
+			return json;
+		}
+		size_t off = 0;
+		parseStream(fs, off);
+		return JSONElement();
+	}
 
-	JSONElement RJSON::parse(const std::string& _data, size_t& _off)
+	JSONElement RJSON::parseStream(std::wfstream& _fs, size_t& _off)
+	{
+		const int whitespaceLen = strlen(JSONWhitespace);
+		wchar_t buffer[buffSize];
+		size_t size = 0; // <= buffSize
+		size_t totalSizeBefore = 0; // total bytes read not including offset. totalOffset = totalSizeBefore + _off
+
+		//
+		// Lambdas
+		//
+
+		// reads data into the buffer from _fs and sets _off to zero and size to new size if successful
+		// @returns true if data was read
+		auto readBuffer = [&buffer, &totalSizeBefore, &size, &_fs, &_off]() -> bool {
+			totalSizeBefore += size;
+			_fs.read(buffer, buffSize);
+			if (_fs.gcount())
+			{// read something
+				size = _fs.gcount();
+				_off = 0;
+				return true;
+			}
+			return false;
+			};
+
+		// returns false if whitespace has no end
+		auto findEndOfWhiteSpace = [&readBuffer, &size, &_fs, &buffer, whitespaceLen, &_off]() -> bool {
+			do
+			{
+				for (; _off < size; _off++)
+				{
+					for (size_t j = 0; j < whitespaceLen; j++)
+					{
+						if (buffer[_off] != buffer[j])
+						{
+							return true;
+						}
+					}
+				}
+			} while (readBuffer());
+			return false;
+			};
+
+		// parse string
+		// @param json is used for setting errors
+		// @returns string
+		auto parseString = [&_off, &size, &buffer, &readBuffer, &totalSizeBefore](JSONElement& json) -> std::wstring {
+			std::wstring string;
+			size_t stringStart = _off;
+			for (; _off < size; _off++)
+			{
+				if (buffer[_off] == '\\')
+				{// parse control characters
+					// Add string found from stringStart to _off
+					size_t stringSize = string.size();
+					string.resize(stringSize + _off - stringStart);
+					memcpy_s(
+						string.data() + stringSize * sizeof(wchar_t),
+						string.size() * sizeof(wchar_t) - stringSize * sizeof(wchar_t),
+						buffer + stringStart * sizeof(wchar_t), size - stringStart * sizeof(wchar_t));
+					if (++_off == size)
+					{
+						readBuffer();
+					}
+					stringStart = _off + 1;
+					switch (buffer[_off])
+					{
+					case '\"':
+						string += '\"';
+						break;
+					case '\\':
+						string += '\\';
+						break;
+					case '/':
+						string += '/';
+						break;
+					case 'b':
+						string += '\b';
+						break;
+					case 'f':
+						string += '\f';
+						break;
+					case 'n':
+						string += '\n';
+						break;
+					case 'r':
+						string += '\r';
+						break;
+					case 't':
+						string += '\t';
+						break;
+					case 'u':
+					{
+						if (_off + 4 >= size)
+						{
+							stringStart = 1;// set to one to be set to zero below
+							readBuffer();
+							if (size <= 4)
+							{
+								json.errorLocation = totalSizeBefore + _off - 1;// -1 due to offset from   stringStart = _off + 1;
+								json.error = JSONErrors::UnexpectedControl_Character;
+								return string;
+							}
+						}
+						wchar_t hexBuff[4];
+						stringStart--;
+						memcpy_s(
+							hexBuff,
+							sizeof(hexBuff),
+							buffer + stringStart * sizeof(wchar_t),
+							4);
+
+						wchar_t* _Eptr;
+						const wchar_t _Ans = _CSTD wcstol(hexBuff, &_Eptr, 16);
+
+						if (hexBuff == _Eptr) {
+							// invalid stoi argument
+							// to prevent injection, skip
+							stringStart += 4;
+							break;
+						}
+						string += _Ans;
+						stringStart += 4;
+						break;
+					}
+					default:
+						json.errorLocation = totalSizeBefore + _off - 1;// -1 due to offset from   stringStart = _off + 1;
+						json.error = JSONErrors::UnexpectedControl_Character;
+						return string;
+					}
+				}
+				if (buffer[_off] == '\"')
+				{// found end of string
+					break;
+				}
+			}
+			return string;
+			};
+
+		std::function<void(JSONElement&)> parseObject;
+		std::function<JSONElement()> parseJSON;
+		std::function<void(JSONElement&)> parseValue = [&parseJSON, &parseObject, &parseString, &findEndOfWhiteSpace, &buffer, &_off, &totalSizeBefore](JSONElement& json) -> void {
+			if (!findEndOfWhiteSpace())
+			{
+				json.errorLocation = totalSizeBefore + _off - 1;
+				json.error = JSONErrors::UnexpectedControl_Character;
+				return;
+			}
+			switch (buffer[_off])
+			{
+			case '\"':
+				parseString(json);
+				break;
+			case '-':
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+
+				break;
+			case '{':
+			case '[':
+				json.children.emplace_back(parseJSON());
+				break;
+			default:
+				break;
+			}
+			};
+
+		// expects _off to be after '{'
+		// _off will be at '}' unless error
+		parseObject = [&parseValue, &findEndOfWhiteSpace, &totalSizeBefore, &_off, &buffer, &parseString](JSONElement& object) -> void {
+			if (!findEndOfWhiteSpace())
+			{
+				object.errorLocation = totalSizeBefore + _off;
+				object.error = JSONErrors::Unexpected_Character;
+				return;
+			}
+			switch (buffer[_off])
+			{
+			case '}':
+				return;
+			case '\"':
+			{
+				JSONElement element;
+				element.name = parseString(object);
+				if (element.hasError())
+				{
+					object.copyError(element);
+					return;
+				}
+				if (!findEndOfWhiteSpace())
+				{
+					return;
+				}
+				if (buffer[_off] != ':')
+				{
+					object.errorLocation = totalSizeBefore + _off;
+					object.error = JSONErrors::Unexpected_Character;
+					return;
+				}
+				parseValue(element);
+				if (element.hasError())
+				{
+					object.copyError(element);
+					return;
+				}
+			}
+			default:
+				object.errorLocation = totalSizeBefore + _off;
+				object.error = JSONErrors::Unexpected_Character;
+				return;
+			}
+			};
+
+
+		// parses json
+		parseJSON = [&parseObject, &parseValue, &parseString, &readBuffer, &findEndOfWhiteSpace , &buffer, &totalSizeBefore, &_off, &size]() -> JSONElement {
+			JSONElement json;
+
+			if (!findEndOfWhiteSpace())
+			{
+				return json;
+			}
+			for (; _off < size; )
+			{
+				if (!findEndOfWhiteSpace())
+				{
+					return json;
+				}
+				switch (buffer[_off])
+				{
+				case '{':
+					json.type = JSONTypes::Object;
+					_off++;
+					parseObject(json);
+					return json;
+				case '[':
+					json.type = JSONTypes::Array;
+
+
+					break;
+				default:
+					json.errorLocation = totalSizeBefore + _off;
+					json.error = JSONErrors::Unexpected_Character;
+					return json;
+				}
+
+				if (_off + 1 >= size)
+				{
+					readBuffer();
+					continue;
+				}
+				_off++;
+			}
+			};
+
+		//
+		// parsing
+		//
+		
+		
+
+		return parseJSON();
+	}
+
+
+	JSONElement RJSON::parse(const std::string& _data, size_t& _off, const std::fstream& _fs)
 	{
 		JSONElement elem;
 		AfterWhiteSpace;
@@ -1185,7 +1471,7 @@ namespace RJSON
 
 		return name;
 	}
-
+	
 	void RJSON::parseValue(JSONElement& _elem, const std::string& _data, size_t& _off)
 	{
 		size_t start = _off;

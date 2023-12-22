@@ -24,6 +24,8 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <fstream>
+#include <functional>
 
 #ifdef _HAS_CXX17
 	#ifndef __RJSON__
@@ -99,7 +101,8 @@ namespace RJSON {
 		UnexpectedEndOfString,
 		UnexpectedEndOfObject,
 		JSONisEmpty,
-		UnhandledException
+		UnhandledException,
+		FailedToOpenFile
 	};
 
 	// get index to first byte after whitespace
@@ -288,11 +291,15 @@ if (_off == std::string::npos)\
 		//RJSON(_json _JSONElements...);
 
 		static JSONElement				EmptyElem;
-		static JSONElement				load(std::string _jsonstructure);
-
+		static JSONElement				load(const std::string& _jsonstructure);
+		static JSONElement				loadFile(const std::wstring& _path);
+		
+		static constexpr size_t			buffSize = 2048;
 	private:
 		//static JSONElement				parseElement(const std::string& _data, size_t& _off, JSONType _type);
-		static JSONElement				parse(const std::string& _data, size_t& _off);
+		
+		static JSONElement				parseStream(std::wfstream& _fs, size_t& _off);
+		static JSONElement				parse(const std::string& _data, size_t& _off, const std::fstream& _fs = std::fstream());
 		static std::string				parseString(JSONElement& _elem, const std::string& _data, size_t& _off);
 		static void						parseValue(JSONElement& _elem, const std::string& _data, size_t& _off);
 		
