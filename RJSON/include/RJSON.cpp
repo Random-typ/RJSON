@@ -53,24 +53,24 @@ namespace RJSON
 		type = JSONTypes::Object;
 	}
 
-	JSONElement::JSONElement(std::string _name, JSONType _type)
+	JSONElement::JSONElement(string _name, JSONType _type)
 		: name(_name), type(_type) {}
 
 
-	JSONElement::JSONElement(const std::string& _name, size_t _val)
+	JSONElement::JSONElement(const string& _name, size_t _val)
 	: name(_name){
 		name = _name;
 		value = std::to_string(_val);
 		type = JSONTypes::Integer;
 	}
 
-	JSONElement::JSONElement(const std::string& _name, float _val) 
+	JSONElement::JSONElement(const string& _name, float _val) 
 	: name(_name){
 		value = std::to_string(_val);
 		type = JSONTypes::Float;
 	}
 
-	JSONElement::JSONElement(const std::string& _name, bool _val) 
+	JSONElement::JSONElement(const string& _name, bool _val) 
 		: name(_name)
 	{
 		type = JSONTypes::Boolean;
@@ -82,13 +82,13 @@ namespace RJSON
 		value = "false";
 	}
 
-	JSONElement::JSONElement(const std::string& _name, JSONElementArray _json, JSONType _type)
+	JSONElement::JSONElement(const string& _name, JSONElementArray _json, JSONType _type)
 		: name(_name), 
 		children(_json),
 		type(_type){
 	}
 
-	JSONElement::JSONElement(const std::string& _name, const std::string& _val)
+	JSONElement::JSONElement(const string& _name, const string& _val)
 		: name(_name),
 		value(_val)
 	{
@@ -111,9 +111,9 @@ namespace RJSON
 	{
 		return error != JSONErrors::OK;
 	}
-	std::string JSONElement::getErrorText() const
+	string JSONElement::getErrorText() const
 	{
-		std::string text;
+		string text;
 		switch (error)
 		{
 		case JSONErrors::OK:
@@ -144,7 +144,7 @@ namespace RJSON
 		return text;
 	}
 
-	JSONElement& JSONElement::get(const std::string& _name)
+	JSONElement& JSONElement::get(const string& _name)
 	{
 		for (JSONElement& elem : children)
 			if (elem.name == _name)
@@ -163,7 +163,7 @@ namespace RJSON
 		return children[_index];
 	}
 
-	JSONElementArrayPTR JSONElement::getAll(const std::string& _name)
+	JSONElementArrayPTR JSONElement::getAll(const string& _name)
 	{
 		JSONElementArrayPTR elements;
 		for (size_t i = 0; i < children.size(); i++)
@@ -179,7 +179,7 @@ namespace RJSON
 		return elements;
 	}
 
-	JSONElement& JSONElement::addChild(const std::string& _name, const std::string& _value, JSONType _type)
+	JSONElement& JSONElement::addChild(const string& _name, const string& _value, JSONType _type)
 	{
 		JSONElement elem;
 		elem.name = _name;
@@ -189,7 +189,7 @@ namespace RJSON
 		return children.back();
 	}
 	
-	JSONElement& JSONElement::addChild(const std::string& _name, const char* _value, JSONType _type)
+	JSONElement& JSONElement::addChild(const string& _name, const char* _value, JSONType _type)
 	{
 		JSONElement elem;
 		elem.name = _name;
@@ -199,37 +199,37 @@ namespace RJSON
 		return children.back();
 	}
 
-	JSONElement& JSONElement::addChild(const std::string& _name, size_t _value)
+	JSONElement& JSONElement::addChild(const string& _name, size_t _value)
 	{
 		return addChild(_name, std::to_string(_value), JSONType::Integer);
 	}
 
-	JSONElement& JSONElement::addChild(const std::string& _name, int _value)
+	JSONElement& JSONElement::addChild(const string& _name, int _value)
 	{
 		return addChild(_name, std::to_string(_value), JSONType::Integer);
 	}
 
-	JSONElement& JSONElement::addChild(const std::string& _name, unsigned int _value)
+	JSONElement& JSONElement::addChild(const string& _name, unsigned int _value)
 	{
 		return addChild(_name, std::to_string(_value), JSONType::Integer);
 	}
 
-	JSONElement& JSONElement::addChild(const std::string& _name, long long _value)
+	JSONElement& JSONElement::addChild(const string& _name, long long _value)
 	{
 		return addChild(_name, std::to_string(_value), JSONType::Integer);
 	}
 
-	JSONElement& JSONElement::addChild(const std::string& _name, double _value)
+	JSONElement& JSONElement::addChild(const string& _name, double _value)
 	{
 		return addChild(_name, std::to_string(_value), JSONType::Float);
 	}
 	
-	JSONElement& JSONElement::addChild(const std::string& _name, long double _value)
+	JSONElement& JSONElement::addChild(const string& _name, long double _value)
 	{
 		return addChild(_name, std::to_string(_value), JSONType::Float);
 	}
 
-	JSONElement& JSONElement::addChild(const std::string& _name, bool _value)
+	JSONElement& JSONElement::addChild(const string& _name, bool _value)
 	{
 		if (_value)
 		{
@@ -238,7 +238,7 @@ namespace RJSON
 		return addChild(_name, "false", JSONType::Boolean);
 	}
 
-	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<JSONElement>& _elements)
+	JSONElement& JSONElement::addChild(const string& _name, const std::vector<JSONElement>& _elements)
 	{
 		JSONElement elem(_name);
 		elem.children = _elements;
@@ -247,7 +247,7 @@ namespace RJSON
 		return elem;
 	}
 
-	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<std::string>& _array)
+	JSONElement& JSONElement::addChild(const string& _name, const stringArray& _array)
 	{
 		JSONElement elem;
 		elem.name = _name;
@@ -263,7 +263,7 @@ namespace RJSON
 		return children.back();
 	}
 
-	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<size_t>& _array)
+	JSONElement& JSONElement::addChild(const string& _name, const std::vector<size_t>& _array)
 	{
 		JSONElement elem;
 		elem.name = _name;
@@ -279,7 +279,7 @@ namespace RJSON
 		return children.back();
 	}
 
-	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<int>& _array)
+	JSONElement& JSONElement::addChild(const string& _name, const std::vector<int>& _array)
 	{
 		JSONElement elem;
 		elem.name = _name;
@@ -295,7 +295,7 @@ namespace RJSON
 		return children.back();
 	}
 
-	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<double>& _array)
+	JSONElement& JSONElement::addChild(const string& _name, const std::vector<double>& _array)
 	{
 		JSONElement elem;
 		elem.name = _name;
@@ -311,7 +311,7 @@ namespace RJSON
 		return children.back();
 	}
 
-	JSONElement& JSONElement::addChild(const std::string& _name, const std::vector<bool>& _array)
+	JSONElement& JSONElement::addChild(const string& _name, const std::vector<bool>& _array)
 	{
 		JSONElement elem;
 		elem.name = _name;
@@ -337,7 +337,7 @@ namespace RJSON
 		return children.back();
 	}
 
-	bool JSONElement::removeChild(const std::string& _name)
+	bool JSONElement::removeChild(const string& _name)
 	{
 		for (size_t i = 0; i < children.size(); i++)
 		{
@@ -350,7 +350,7 @@ namespace RJSON
 		return false;
 	}
 
-	bool JSONElement::hasChild(const std::string& _name) const
+	bool JSONElement::hasChild(const string& _name) const
 	{
 		for (const JSONElement& elem : children)
 			if (elem.name == _name)
@@ -396,11 +396,11 @@ namespace RJSON
 	//	return -1;
 	//}
 
-	std::string JSONElement::asJSON(bool _formatted, std::string _whitespace) const
+	string JSONElement::asJSON(bool _formatted, string _whitespace) const
 	{
 		if (_formatted)
 		{
-			std::string indent;
+			string indent;
 			return asJSONFormatted(indent, _whitespace);
 		}
 		if (name.empty())
@@ -415,7 +415,7 @@ namespace RJSON
 	}
 
 	
-	std::string JSONElement::asJSONFormatted(std::string& _indent, std::string _whitespace) const
+	string JSONElement::asJSONFormatted(string& _indent, string _whitespace) const
 	{
 		if (name.empty())
 		{
@@ -424,18 +424,18 @@ namespace RJSON
 		_indent += _whitespace;
 		if (type == JSONTypes::Array)
 		{
-			std::string front = "[\n" + asJSONInnerFormatted(_indent, _whitespace);
+			string front = "[\n" + asJSONInnerFormatted(_indent, _whitespace);
 			_indent.pop_back();
 			return front + _indent + "\n]";
 		}
-		std::string front = "{\n" + asJSONInnerFormatted(_indent, _whitespace);
+		string front = "{\n" + asJSONInnerFormatted(_indent, _whitespace);
 		_indent.pop_back();
 		return front + _indent + "\n}";
 	}
 
-	std::string JSONElement::asJSONInnerFormatted(std::string& _indent, std::string _whitespace) const
+	string JSONElement::asJSONInnerFormatted(string& _indent, string _whitespace) const
 	{
-		std::string json;
+		string json;
 		if (!name.empty())
 		{
 			json += _indent + "\"" + name + "\": ";
@@ -483,9 +483,9 @@ namespace RJSON
 		return json;
 	}
 
-	std::string JSONElement::asJSONInner() const
+	string JSONElement::asJSONInner() const
 	{
-		std::string json;
+		string json;
 		if (!name.empty())
 		{
 			json += "\"" + name + "\":";
@@ -524,7 +524,7 @@ namespace RJSON
 		return json;
 	}
 
-	std::string JSONElement::rawValue() const
+	string JSONElement::rawValue() const
 	{// check for controlcharacters
 		switch (type)
 		{
@@ -539,7 +539,7 @@ namespace RJSON
 		case JSONTypes::String:
 		default:
 			// Handle control characters
-			std::string valueModified = value;
+			string valueModified = value;
 			for (size_t i = 0; i < valueModified.size(); i++)
 			{
 				if (valueModified[i] == '"' || 
@@ -636,9 +636,9 @@ namespace RJSON
 				type = JSONTypes::String;
 			return;
 		}
-		if (value.find_first_not_of("-1234567890.") == std::string::npos)// e and E are not included here | Eulers numbers not supported
+		if (value.find_first_not_of("-1234567890.") == string::npos)// e and E are not included here | Eulers numbers not supported
 		{// Number
-			if (value.find('.') != std::string::npos)
+			if (value.find('.') != string::npos)
 			{// Float
 				type = JSONTypes::Float;
 			}
@@ -675,11 +675,12 @@ namespace RJSON
 		{
 			return 0;
 		}
+		
 		char* _Eptr;// that would be for error checking but im not gonna do that
 		return strtold(value.c_str(), &_Eptr);
 	}
 
-	std::string JSONElement::valueAsString() const
+	string JSONElement::valueAsString() const
 	{
 		return value;
 	}
@@ -691,9 +692,9 @@ namespace RJSON
 		return false;
 	}
 
-	std::vector<std::string> JSONElement::asArray() const
+	stringArray JSONElement::asArray() const
 	{
-		std::vector<std::string> arr;
+		stringArray arr;
 		for (auto& i : children)
 		{
 			arr.emplace_back(i.value);
@@ -756,13 +757,14 @@ namespace RJSON
 		return get(_index);
 	}
 
-	JSONElement& JSONElement::operator[](const std::string& _name)
+	JSONElement& JSONElement::operator[](const string& _name)
 	{
 		return get(_name);
 	}
 
 	JSONElement& JSONElement::operator=(size_t _value)
 	{
+		
 		value = std::to_string(_value);
 		type = JSONTypes::Integer;
 		return *this;
@@ -929,7 +931,7 @@ namespace RJSON
 		return _left;
 	}
 	
-	JSONElement RJSON::load(const std::string& _jsonStructure)
+	JSONElement RJSON::load(const string& _jsonStructure)
 	{
 		if (_jsonStructure.empty())
 		{
@@ -952,57 +954,72 @@ namespace RJSON
 		}
 	}
 
-	JSONElement RJSON::loadFile(const std::wstring& _path)
+	JSONElement RJSON::loadFile(const string& _path)
 	{
-		std::wfstream fs(_path);
-		if (!fs.is_open())
+		std::fstream fs(_path);
+		return loadFile(fs);
+	}
+
+	JSONElement RJSON::loadFile(std::fstream& _fs)
+	{
+		if (!_fs.is_open())
 		{
 			JSONElement json;
 			json.error = JSONErrors::FailedToOpenFile;
 			return json;
 		}
 		size_t off = 0;
-		parseStream(fs, off);
-		return JSONElement();
+		return parseStream(_fs, off);
 	}
 
-	JSONElement RJSON::parseStream(std::wfstream& _fs, size_t& _off)
+	JSONElement RJSON::parseStream(std::fstream& _fs, size_t& _off)
 	{
 		const int whitespaceLen = strlen(JSONWhitespace);
-		wchar_t buffer[buffSize];
+		char buffer[buffSize];
 		size_t size = 0; // <= buffSize
 		size_t totalSizeBefore = 0; // total bytes read not including offset. totalOffset = totalSizeBefore + _off
 
 		//
 		// Lambdas
 		//
+		std::function<void(JSONElement&)> parseObject;
+		std::function<void(JSONElement&)> parseArray;
+
 
 		// reads data into the buffer from _fs and sets _off to zero and size to new size if successful
-		// @returns true if data was read
+		// @returns true if data was read, false otherwise and sets size to zero
 		auto readBuffer = [&buffer, &totalSizeBefore, &size, &_fs, &_off]() -> bool {
 			totalSizeBefore += size;
 			_fs.read(buffer, buffSize);
-			if (_fs.gcount())
+			size = _fs.gcount();
+			if (size)
 			{// read something
-				size = _fs.gcount();
 				_off = 0;
 				return true;
 			}
 			return false;
 			};
 
-		// returns false if whitespace has no end
+		// starts at _off and end _off at the non-whitespace character
+		// returns false if whitespace has no end, true otherwise
 		auto findEndOfWhiteSpace = [&readBuffer, &size, &_fs, &buffer, whitespaceLen, &_off]() -> bool {
+			auto isWhitespace = [&whitespaceLen, &buffer, &_off]() -> bool {
+				for (size_t j = 0; j < whitespaceLen; j++)
+				{
+					if (buffer[_off] == JSONWhitespace[j])
+					{
+						return true;
+					}
+				}
+				return false;
+				};
 			do
 			{
 				for (; _off < size; _off++)
 				{
-					for (size_t j = 0; j < whitespaceLen; j++)
+					if (!isWhitespace())
 					{
-						if (buffer[_off] != buffer[j])
-						{
-							return true;
-						}
+						return true;
 					}
 				}
 			} while (readBuffer());
@@ -1010,22 +1027,30 @@ namespace RJSON
 			};
 
 		// parse string
+		// expects _off to be after string start ("\"")
+		// _off will be at ending "\"" when return unless error
 		// @param json is used for setting errors
 		// @returns string
-		auto parseString = [&_off, &size, &buffer, &readBuffer, &totalSizeBefore](JSONElement& json) -> std::wstring {
-			std::wstring string;
+		auto parseString = [&_off, &size, &buffer, &readBuffer, &totalSizeBefore](JSONElement& json) -> string {
+			string string;
 			size_t stringStart = _off;
-			for (; _off < size; _off++)
+			if (_off + 1 >= size)
 			{
+				readBuffer();
+				stringStart = 0;
+			}
+			for (; _off < size;)
+			{
+				if (buffer[_off] == '\"')
+				{// found end of string
+					break;
+				}
+				// control character handling
 				if (buffer[_off] == '\\')
 				{// parse control characters
 					// Add string found from stringStart to _off
 					size_t stringSize = string.size();
-					string.resize(stringSize + _off - stringStart);
-					memcpy_s(
-						string.data() + stringSize * sizeof(wchar_t),
-						string.size() * sizeof(wchar_t) - stringSize * sizeof(wchar_t),
-						buffer + stringStart * sizeof(wchar_t), size - stringStart * sizeof(wchar_t));
+					string.append(buffer + stringStart, _off - stringStart);
 					if (++_off == size)
 					{
 						readBuffer();
@@ -1070,16 +1095,16 @@ namespace RJSON
 								return string;
 							}
 						}
-						wchar_t hexBuff[4];
+						char hexBuff[5]{ 0 };
 						stringStart--;
 						memcpy_s(
 							hexBuff,
 							sizeof(hexBuff),
-							buffer + stringStart * sizeof(wchar_t),
+							buffer + stringStart * sizeof(char),
 							4);
 
-						wchar_t* _Eptr;
-						const wchar_t _Ans = _CSTD wcstol(hexBuff, &_Eptr, 16);
+						char* _Eptr;
+						const char _Ans = _CSTD strtol(hexBuff, &_Eptr, 16);
 
 						if (hexBuff == _Eptr) {
 							// invalid stoi argument
@@ -1097,17 +1122,27 @@ namespace RJSON
 						return string;
 					}
 				}
-				if (buffer[_off] == '\"')
-				{// found end of string
-					break;
+				if (_off + 1 >= size)
+				{
+					string.append(buffer + stringStart, size - stringStart);
+					readBuffer();
+					stringStart = 0;
+					continue;
 				}
+				_off++;
+			}
+			if (_off - stringStart)
+			{
+				string.append(buffer + stringStart, _off - stringStart);
 			}
 			return string;
 			};
 
-		std::function<void(JSONElement&)> parseObject;
+		
 		std::function<JSONElement()> parseJSON;
-		std::function<void(JSONElement&)> parseValue = [&parseJSON, &parseObject, &parseString, &findEndOfWhiteSpace, &buffer, &_off, &totalSizeBefore](JSONElement& json) -> void {
+		// expects _off to be after ':'
+		// _off will be at end of value e.g '}' or '\"'
+		std::function<void(JSONElement&)> parseValue = [&parseArray, &readBuffer, &parseJSON, &parseObject, &parseString, &findEndOfWhiteSpace, &buffer, &size, &_off, &totalSizeBefore](JSONElement& json) -> void {
 			if (!findEndOfWhiteSpace())
 			{
 				json.errorLocation = totalSizeBefore + _off - 1;
@@ -1117,7 +1152,9 @@ namespace RJSON
 			switch (buffer[_off])
 			{
 			case '\"':
-				parseString(json);
+				json.type = JSONTypes::String;
+				_off++;
+				json.value = parseString(json);
 				break;
 			case '-':
 			case '0':
@@ -1130,66 +1167,264 @@ namespace RJSON
 			case '7':
 			case '8':
 			case '9':
+			{
+				json.type = JSONTypes::Integer;
+				// parse number
+				// find first of not a number
+				size_t start = _off;
+				auto findEndOfNumber = [&start, &readBuffer, &_off, &size, &buffer, &json]() {
+					constexpr const char* numberSymbols = "-0123456789.Ee+";
+					auto isNumber= [&numberSymbols, &buffer, &_off]() -> bool {
+						for (size_t j = 0; j < strlen(numberSymbols); j++)
+						{
+							if (buffer[_off] == numberSymbols[j])
+							{
+								return true;
+							}
+						}
+						return false;
+						};
+					do
+					{
+						for (; _off < size; _off++)
+						{
+							if (!isNumber())
+							{
+								return true;
+							}
+						}
+						if (_off - start)
+						{
+							//continue;
+						}
+						json.value.append(buffer + start, _off - start);
+						start = 0;
+					} while (readBuffer());
+					return false;
+					};
 
+				if (!findEndOfNumber())
+				{
+					json.errorLocation = totalSizeBefore + _off - 1;
+					json.error = JSONErrors::UnexpectedEndOfValue;
+					return;
+				}
+				json.value.append(buffer + start, _off - start);
 				break;
+			}	
 			case '{':
+			{
+				json.type = JSONTypes::Object;
+				_off++;
+				//JSONElement object;
+				parseObject(json);
+				//json.children.emplace_back(object);
+				break;
+			}
 			case '[':
-				json.children.emplace_back(parseJSON());
+			{
+				json.type = JSONTypes::Array;
+				_off++;
+				parseArray(json);
 				break;
+			}
+			case 't':
+			{
+				json.type = JSONTypes::Boolean;
+				size_t start = _off;
+				if (_off + 3 >= size)
+				{
+					json.value.append(buffer + start, size - _off);
+					readBuffer();
+					start = 0;
+					if (_off + 4 + json.value.size() >= size)
+					{
+						json.errorLocation = totalSizeBefore + _off - 1;
+						json.error = JSONErrors::Unexpected_Character;
+						return;
+					}
+				}
+				if (json.value.size() - 4)
+				{
+					json.value.append(buffer + start, 4 - json.value.size());
+				}
+				if (json.value != "true")
+				{
+					json.errorLocation = totalSizeBefore + _off - 1;
+					json.error = JSONErrors::Unexpected_Character;
+					return;
+				}
+				_off += 4;
+				break;
+			}
+			case 'f':
+			{
+				json.type = JSONTypes::Boolean;
+				size_t start = _off;
+				if (_off + 4 >= size)
+				{
+					json.value.append(buffer + start, size - _off);
+					readBuffer();
+					if (_off + 5 + json.value.size() >= size)
+					{
+						json.errorLocation = totalSizeBefore + _off - 1;
+						json.error = JSONErrors::Unexpected_Character;
+						return;
+					}
+				}
+				if (json.value.size() - 5)
+				{
+					json.value.append(buffer + start, json.value.size() - 5);
+				}
+
+				if (json.value != "false")
+				{
+					json.errorLocation = totalSizeBefore + _off - 1;
+					json.error = JSONErrors::Unexpected_Character;
+					return;
+				}
+				_off += 5;
+				break;
+			}				
+			case 'n':
+			{
+				json.type = JSONTypes::Boolean;
+				size_t start = _off;
+				if (_off + 3 >= size)
+				{
+					json.value.append(buffer + start, size - _off);
+					readBuffer();
+					if (_off + 4 + json.value.size() >= size)
+					{
+						json.errorLocation = totalSizeBefore + _off - 1;
+						json.error = JSONErrors::Unexpected_Character;
+						return;
+					}
+				}
+				if (json.value.size() - 4)
+				{
+					json.value.append(buffer + start, json.value.size() - 4);
+				}
+				if (json.value != "null")
+				{
+					json.errorLocation = totalSizeBefore + _off - 1;
+					json.error = JSONErrors::Unexpected_Character;
+					return;
+				}
+				_off += 4;
+				break;
+			}
 			default:
-				break;
+				json.errorLocation = totalSizeBefore + _off - 1;
+				json.error = JSONErrors::Unexpected_Character;
+				return;
 			}
 			};
 
 		// expects _off to be after '{'
 		// _off will be at '}' unless error
 		parseObject = [&parseValue, &findEndOfWhiteSpace, &totalSizeBefore, &_off, &buffer, &parseString](JSONElement& object) -> void {
-			if (!findEndOfWhiteSpace())
+			while (true)
 			{
-				object.errorLocation = totalSizeBefore + _off;
-				object.error = JSONErrors::Unexpected_Character;
-				return;
-			}
-			switch (buffer[_off])
-			{
-			case '}':
-				return;
-			case '\"':
-			{
-				JSONElement element;
-				element.name = parseString(object);
-				if (element.hasError())
-				{
-					object.copyError(element);
-					return;
-				}
 				if (!findEndOfWhiteSpace())
-				{
-					return;
-				}
-				if (buffer[_off] != ':')
 				{
 					object.errorLocation = totalSizeBefore + _off;
 					object.error = JSONErrors::Unexpected_Character;
 					return;
 				}
-				parseValue(element);
-				if (element.hasError())
+				switch (buffer[_off])
 				{
-					object.copyError(element);
+				case '}':
+					return;
+				case ',':
+					_off++;
+					if (!findEndOfWhiteSpace() || buffer[_off] != '\"')
+					{
+						object.errorLocation = totalSizeBefore + _off;
+						object.error = JSONErrors::Unexpected_Character;
+						return;
+					}
+					// buffer[_off] == '\"'
+				case '\"':
+				{
+					JSONElement element;
+					_off++;
+					element.name = parseString(object);
+					_off++;
+					if (object.hasError())
+					{
+						return;
+					}
+					if (!findEndOfWhiteSpace())
+					{
+						object.errorLocation = totalSizeBefore + _off;
+						object.error = JSONErrors::Unexpected_Character;
+						return;
+					}
+					if (buffer[_off] != ':')
+					{
+						object.errorLocation = totalSizeBefore + _off;
+						object.error = JSONErrors::Unexpected_Character;
+						return;
+					}
+					_off++;
+					parseValue(element);
+					_off++;
+					if (element.hasError())
+					{
+						object.copyError(element);
+						return;
+					}
+					object.children.emplace_back(element);
+					break;
+				}
+				default:
+					object.errorLocation = totalSizeBefore + _off;
+					object.error = JSONErrors::Unexpected_Character;
 					return;
 				}
 			}
-			default:
-				object.errorLocation = totalSizeBefore + _off;
-				object.error = JSONErrors::Unexpected_Character;
-				return;
+			};
+
+		// expects _off to be after '['
+		// _off will be at ']' unless error
+		parseArray = [&parseValue, &findEndOfWhiteSpace, &totalSizeBefore, &_off, &buffer, &parseString](JSONElement& object) -> void {
+			while (true)
+			{
+				if (!findEndOfWhiteSpace())
+				{
+					object.errorLocation = totalSizeBefore + _off;
+					object.error = JSONErrors::Unexpected_Character;
+					return;
+				}
+				switch (buffer[_off])
+				{
+				case ']':
+					return;
+				case ',':
+					_off++;
+					if (!findEndOfWhiteSpace())
+					{
+						object.errorLocation = totalSizeBefore + _off;
+						object.error = JSONErrors::Unexpected_Character;
+						return;
+					}
+					break;
+				}
+				JSONElement value;
+				parseValue(value);
+				_off++;
+				if (value.hasError())
+				{
+					object.copyError(value);
+					return;
+				}
+				object.children.emplace_back(value);
 			}
 			};
 
-
 		// parses json
-		parseJSON = [&parseObject, &parseValue, &parseString, &readBuffer, &findEndOfWhiteSpace , &buffer, &totalSizeBefore, &_off, &size]() -> JSONElement {
+		parseJSON = [&parseArray, &parseObject, &parseValue, &parseString, &readBuffer, &findEndOfWhiteSpace , &buffer, &totalSizeBefore, &_off, &size]() -> JSONElement {
 			JSONElement json;
 
 			if (!findEndOfWhiteSpace())
@@ -1211,7 +1446,9 @@ namespace RJSON
 					return json;
 				case '[':
 					json.type = JSONTypes::Array;
-
+					_off++;
+					parseArray(json);
+					return json;
 
 					break;
 				default:
@@ -1230,7 +1467,7 @@ namespace RJSON
 			};
 
 		//
-		// parsing
+		// start
 		//
 		
 		
@@ -1239,7 +1476,7 @@ namespace RJSON
 	}
 
 
-	JSONElement RJSON::parse(const std::string& _data, size_t& _off, const std::fstream& _fs)
+	JSONElement RJSON::parse(const string& _data, size_t& _off)
 	{
 		JSONElement elem;
 		AfterWhiteSpace;
@@ -1405,26 +1642,26 @@ namespace RJSON
 		return elem;
 	}
 
-	std::string RJSON::parseString(JSONElement& _elem, const std::string& _data, size_t& _off)
+	string RJSON::parseString(JSONElement& _elem, const string& _data, size_t& _off)
 	{
-		std::string name;
+		string name;
 	parseName:
 		size_t start = _off + 1;
 		_off = _data.find_first_of("\\\"", _off + 1);
-		if (_off == std::string::npos) {
+		if (_off == string::npos) {
 			_elem.error = JSONErrors::UnexpectedEndOfString;
 			_elem.errorLocation = start;
-			return std::string();
+			return string();
 		}
 		
 		if (_data[_off] == '\\')
 		{// control character
 			name += _data.substr(start, _off - start);
 			_off++;
-			if (_off == std::string::npos) {
+			if (_off == string::npos) {
 				_elem.error = JSONErrors::UnexpectedEndOfString;
 				_elem.errorLocation = start;
-				return std::string();
+				return string();
 			}
 			switch (_data[_off])
 			{
@@ -1460,7 +1697,7 @@ namespace RJSON
 				// error
 				_elem.error = JSONErrors::UnexpectedControl_Character;
 				_elem.errorLocation = _off;
-				return std::string();
+				return string();
 			}
 			goto parseName;
 		}
@@ -1472,7 +1709,7 @@ namespace RJSON
 		return name;
 	}
 	
-	void RJSON::parseValue(JSONElement& _elem, const std::string& _data, size_t& _off)
+	void RJSON::parseValue(JSONElement& _elem, const string& _data, size_t& _off)
 	{
 		size_t start = _off;
 		switch (_data[_off])
@@ -1491,15 +1728,15 @@ namespace RJSON
 		case '7':
 		case '8':
 		case '9':
-			_off = _data.find_first_of(std::string(JSONWhitespace) + ",}]", _off);
-			if (_off == std::string::npos) {
+			_off = _data.find_first_of(string(JSONWhitespace) + ",}]", _off);
+			if (_off == string::npos) {
 				_elem.errorLocation = _off;
 				_elem.error = JSONErrors::UnexpectedEndOfString;
 				return;
 			}
 			_elem.value = _data.substr(start, _off - start);
 
-			if (_elem.value.find('.') != std::string::npos)
+			if (_elem.value.find('.') != string::npos)
 			{
 				_elem.type = JSONTypes::Float;
 				break;
@@ -1508,14 +1745,14 @@ namespace RJSON
 			break;
 		case 't':
 		case 'f':
-			_off = _data.find_first_of(std::string(JSONWhitespace) + ",}]", _off);
-			if (_off == std::string::npos) return;
+			_off = _data.find_first_of(string(JSONWhitespace) + ",}]", _off);
+			if (_off == string::npos) return;
 			_elem.value = _data.substr(start, _off - start);
 			_elem.type = JSONTypes::Boolean;
 			break;
 		case 'n':
-			_off = _data.find_first_of(std::string(JSONWhitespace) + ",}]", _off);
-			if (_off == std::string::npos) return;
+			_off = _data.find_first_of(string(JSONWhitespace) + ",}]", _off);
+			if (_off == string::npos) return;
 			_elem.value = _data.substr(start, _off - start);
 			_elem.type = JSONTypes::Null;
 			break;

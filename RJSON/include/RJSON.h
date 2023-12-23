@@ -26,6 +26,8 @@
 #include <vector>
 #include <fstream>
 #include <functional>
+#include <locale>
+#include <codecvt>
 
 #ifdef _HAS_CXX17
 	#ifndef __RJSON__
@@ -74,6 +76,71 @@ namespace RJSON {
 	//	*/
 	//};
 
+	//class string : public std::wstring {
+	//public:
+	//	string() : std::wstring() {}
+	//	string(const std::string& _str) : std::wstring(_str.begin(), _str.end()) {}
+	//	string(const std::wstring& _str) : std::wstring(_str) {}
+	//	string(const char* _str) : string(std::string(_str)) {}
+	//	string(const wchar_t* _str) : std::wstring(_str) {}
+	//	operator const  std::string&() {
+	//		return std::string(this->begin(), this->end());
+	//	}
+
+	//	//string operator+(const wchar_t* _str) {
+	//	//	return *this + std::wstring(_str);
+	//	//}
+
+
+	//	string operator+(const char* _str) {
+	//		string str = *this;
+	//		str.resize(str.size() + strlen(_str));
+	//		size_t converted = 0;
+	//		mbstowcs_s(&converted,
+	//			str.data() + this->size() * sizeof(wchar_t),
+	//			strlen(_str),
+	//			_str,
+	//			strlen(_str));
+	//		return str;
+	//	}
+
+	//	std::wstring ws() {
+	//		return *this;
+	//	}
+
+	//	std::string s() {
+	//		return *this;
+	//	}
+	//};
+
+	//inline string operator+(const char* _a, string _b) {
+	//	return string(_a) + _b;
+	//}
+
+	//class stringArray : public std::vector<string> {
+	//public:
+	//	stringArray() {};
+	//	stringArray(std::vector<std::string> _arr) {
+	//		for (auto& i : _arr)
+	//		{
+	//			emplace_back(string(i));
+	//		}
+	//	};
+
+
+	//	operator std::vector<std::string>() {
+	//		std::vector<std::string> arr;
+	//		for (auto& i : *this)
+	//		{
+	//			arr.emplace_back(string(i));
+	//		}
+	//		return arr;
+	//	}
+	//};
+
+	using string = std::string;
+	using stringArray = std::vector<std::string>;
+
 	class JSONElementArrayPTR : public std::vector<JSONElement*>
 	{
 	public:
@@ -100,6 +167,7 @@ namespace RJSON {
 		MissingColon,
 		UnexpectedEndOfString,
 		UnexpectedEndOfObject,
+		UnexpectedEndOfValue,
 		JSONisEmpty,
 		UnhandledException,
 		FailedToOpenFile
@@ -107,7 +175,7 @@ namespace RJSON {
 
 	// get index to first byte after whitespace
 #define isEOD \
-if (_off == std::string::npos)\
+if (_off == string::npos)\
 		return elem;// eof/eod
 #define AfterWhiteSpace \
 	_off = _data.find_first_not_of(JSONWhitespace, _off);\
@@ -127,24 +195,24 @@ if (_off == std::string::npos)\
 		JSONElement(bool _val);
 		JSONElement(const char* _name);
 		JSONElement(const JSONElementArray& _elements);
-		JSONElement(std::string _name, JSONType _type = JSONTypes::Object);
+		JSONElement(string _name, JSONType _type = JSONTypes::Object);
 
-		JSONElement(const std::string& _name, size_t _val);
-		JSONElement(const std::string& _name, float _val);
-		JSONElement(const std::string& _name, bool _val);
-		JSONElement(const std::string& _name, JSONElementArray _json, JSONType _type = JSONTypes::Object);
-		JSONElement(const std::string& _name, const std::string& _val);
+		JSONElement(const string& _name, size_t _val);
+		JSONElement(const string& _name, float _val);
+		JSONElement(const string& _name, bool _val);
+		JSONElement(const string& _name, JSONElementArray _json, JSONType _type = JSONTypes::Object);
+		JSONElement(const string& _name, const string& _val);
 
 		~JSONElement();
 
 		void							copyError(const JSONElement& _elem);
 		bool							hasError() const;
-		std::string						getErrorText() const;
+		string						getErrorText() const;
 
 		// Retrieves child element by it's name
 		// @param _name: Element name
 		// @return JSONElement&
-		JSONElement&					get(const std::string& _name);
+		JSONElement&					get(const string& _name);
 
 		// Retrieves child element by it's index
 		// @param _index: Element index
@@ -154,7 +222,7 @@ if (_off == std::string::npos)\
 		// Retrieves all children and childs children by their name
 		// @param _name: Element name
 		// @return JSONElementArrayPTR
-		JSONElementArrayPTR				getAll(const std::string& _name);
+		JSONElementArrayPTR				getAll(const string& _name);
 
 
 		// Add a child to the current element
@@ -162,21 +230,21 @@ if (_off == std::string::npos)\
 		// @param _value: Value of the element
 		// @param _type: Type of the element
 		// @return JSONElement&
-		JSONElement&					addChild(const std::string& _name, const std::string& _value = "", JSONType _type = JSONTypes::String);
-		JSONElement&					addChild(const std::string& _name, const char* _value, JSONType _type = JSONTypes::String);
-		JSONElement&					addChild(const std::string& _name, size_t _value);
-		JSONElement&					addChild(const std::string& _name, int _value);
-		JSONElement&					addChild(const std::string& _name, unsigned int _value);
-		JSONElement&					addChild(const std::string& _name, long long _value);
-		JSONElement&					addChild(const std::string& _name, double _value);
-		JSONElement&					addChild(const std::string& _name, long double _value);
-		JSONElement&					addChild(const std::string& _name, bool _value);
-		JSONElement&					addChild(const std::string& _name, const std::vector<JSONElement>& _elements);
-		JSONElement&					addChild(const std::string& _name, const std::vector<std::string>& _array);
-		JSONElement&					addChild(const std::string& _name, const std::vector<size_t>& _array);
-		JSONElement&					addChild(const std::string& _name, const std::vector<int>& _array);
-		JSONElement&					addChild(const std::string& _name, const std::vector<double>& _array);
-		JSONElement&					addChild(const std::string& _name, const std::vector<bool>& _array);
+		JSONElement&					addChild(const string& _name, const string& _value = "", JSONType _type = JSONType::String);
+		JSONElement&					addChild(const string& _name, const char* _value, JSONType _type = JSONType::String);
+		JSONElement&					addChild(const string& _name, size_t _value);
+		JSONElement&					addChild(const string& _name, int _value);
+		JSONElement&					addChild(const string& _name, unsigned int _value);
+		JSONElement&					addChild(const string& _name, long long _value);
+		JSONElement&					addChild(const string& _name, double _value);
+		JSONElement&					addChild(const string& _name, long double _value);
+		JSONElement&					addChild(const string& _name, bool _value);
+		JSONElement&					addChild(const string& _name, const std::vector<JSONElement>& _elements);
+		JSONElement&					addChild(const string& _name, const stringArray& _array);
+		JSONElement&					addChild(const string& _name, const std::vector<size_t>& _array);
+		JSONElement&					addChild(const string& _name, const std::vector<int>& _array);
+		JSONElement&					addChild(const string& _name, const std::vector<double>& _array);
+		JSONElement&					addChild(const string& _name, const std::vector<bool>& _array);
 
 
 		// Add a child to the current element
@@ -187,12 +255,12 @@ if (_off == std::string::npos)\
 		// Remove child by its name 
 		// @param _name: Element nae
 		// @return True on success false otherwise
-		bool                            removeChild(const std::string& _name);
+		bool                            removeChild(const string& _name);
 
 		// Check if child exists by name
 		// @param _name: Element nae
 		// @return True when child exists false otherwise
-		bool							hasChild(const std::string& _name) const;
+		bool							hasChild(const string& _name) const;
 
 		// Check if this elemt exists
 		// @return True when element exists false otherwise
@@ -210,9 +278,9 @@ if (_off == std::string::npos)\
 		// @return if an error occurs the return value is less tha zero.
 		//const __int64					getIndex();
 
-		// Convert this element to a json string
-		// @return std::string
-		std::string						asJSON(bool _formatted = false, std::string _whitespace = "\t") const;
+		// Convert this element to a json wstring
+		// @return string
+		string						asJSON(bool _formatted = false, string _whitespace = "\t") const;
 
 		// Get element type
 		// @return JSONType
@@ -229,16 +297,16 @@ if (_off == std::string::npos)\
 		// @return float
 		long double						valueAsFloat() const;
 
-		// get the element value as string
-		// @return std::string
-		std::string						valueAsString() const;
+		// get the element value as wstring
+		// @return string
+		string						valueAsString() const;
 
 		// get the element value as bool
 		// @return bool
 		bool							valueAsBool() const;
 		// get children values as array
-		// @return std::vector<std::string>
-		std::vector<std::string>		asArray() const;
+		// @return std::vector<string>
+		stringArray			asArray() const;
 
 		void							fixValue();
 
@@ -259,7 +327,7 @@ if (_off == std::string::npos)\
 		friend const JSONElement&		operator+=(const JSONElement& _right, const JSONElement& _left);
 
 		JSONElement&					operator[](const size_t _index);
-		JSONElement&					operator[](const std::string& _name);
+		JSONElement&					operator[](const string& _name);
 
 		JSONElement&					operator=(size_t _value);
 		JSONElement&					operator=(float _value);
@@ -267,8 +335,8 @@ if (_off == std::string::npos)\
 		JSONElement&					operator=(const char* _value);
 		JSONElement&					operator=(const JSONElement& _json);
 
-		std::string						name;
-		std::string						value;
+		string						name;
+		string					value;
 		JSONElementArray				children;
 		JSONType						type = JSONTypes::Object;
 
@@ -276,11 +344,11 @@ if (_off == std::string::npos)\
 		JSONErrors						error = JSONErrors::OK;
 		size_t							errorLocation = 0;
 	private:
-		std::string						asJSONFormatted(std::string& _indent, std::string _whitespace) const;
-		std::string						asJSONInnerFormatted(std::string& _indent, std::string _whitespace) const;
+		string						asJSONFormatted(string& _indent, string _whitespace) const;
+		string						asJSONInnerFormatted(string& _indent, string _whitespace) const;
 
-		std::string						asJSONInner() const;
-		std::string						rawValue() const;
+		string						asJSONInner() const;
+		string						rawValue() const;
 	};
 
 
@@ -291,19 +359,20 @@ if (_off == std::string::npos)\
 		//RJSON(_json _JSONElements...);
 
 		static JSONElement				EmptyElem;
-		static JSONElement				load(const std::string& _jsonstructure);
-		static JSONElement				loadFile(const std::wstring& _path);
+		static JSONElement				load(const string& _jsonstructure);
+		static JSONElement				loadFile(const string& _path);
+		static JSONElement				loadFile(std::fstream& _fs);
 		
-		static constexpr size_t			buffSize = 2048;
+		static constexpr size_t			buffSize = 128;
 	private:
-		//static JSONElement				parseElement(const std::string& _data, size_t& _off, JSONType _type);
+		//static JSONElement				parseElement(const string& _data, size_t& _off, JSONType _type);
 		
-		static JSONElement				parseStream(std::wfstream& _fs, size_t& _off);
-		static JSONElement				parse(const std::string& _data, size_t& _off, const std::fstream& _fs = std::fstream());
-		static std::string				parseString(JSONElement& _elem, const std::string& _data, size_t& _off);
-		static void						parseValue(JSONElement& _elem, const std::string& _data, size_t& _off);
+		static JSONElement				parseStream(std::fstream& _fs, size_t& _off);
+		static JSONElement				parse(const string& _data, size_t& _off);
+		static string					parseString(JSONElement& _elem, const string& _data, size_t& _off);
+		static void						parseValue(JSONElement& _elem, const string& _data, size_t& _off);
 		
-		static const char*				JSONWhitespace;
+		static const char*			JSONWhitespace;
 	};
 }
 #endif // !__RJSON__
