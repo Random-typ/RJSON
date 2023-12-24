@@ -371,7 +371,7 @@ if (_off == string::npos)\
 		static JSONElement				parse(const string& _data, size_t& _off);
 		static string					parseString(JSONElement& _elem, const string& _data, size_t& _off);
 		static void						parseValue(JSONElement& _elem, const string& _data, size_t& _off);
-		
+	public:// remove
 		static const char*			JSONWhitespace;
 	};
 }
