@@ -931,6 +931,527 @@ namespace RJSON
 		return _left;
 	}
 	
+	//
+	// RJSONStream
+	//
+
+	size_t RJSONStream::defaultBufferSize = 64;
+
+	RJSONStream::RJSONStream(size_t bufferSize)
+		: buffSize(bufferSize) {
+		buffer = new char(buffSize);
+	}
+
+	RJSONStream::~RJSONStream()
+	{
+		if (buffer)
+		{
+			delete buffer;
+		}
+	}
+
+	JSONElement RJSONStream::parseStream(const char* _path)
+	{
+		JSONElement elem;
+		fs.open(_path);
+		if (!fs.is_open())
+		{
+			elem.error = JSONErrors::FailedToOpenFile;
+			return elem;
+		}
+		elem = parseStream();
+		if (hasError())
+		{
+			elem.error = error;
+			elem.errorLocation = errorLocation;
+		}
+		fs.close();
+		return elem;
+	}
+
+	JSONElement RJSONStream::parseStream()
+	{
+		JSONElement json;
+
+		if (!findEndOfWhitespace())
+		{
+			return json;
+		}
+		for (; off < size; )
+		{
+			if (!findEndOfWhitespace())
+			{
+				return json;
+			}
+			switch (buffer[off])
+			{
+			case '{':
+				json.type = JSONTypes::Object;
+				off++;
+				parseObject(json);
+				return json;
+			case '[':
+				json.type = JSONTypes::Array;
+				off++;
+				parseArray(json);
+				return json;
+			default:
+				json.errorLocation = totalSizeBefore + off;
+				json.error = JSONErrors::Unexpected_Character;
+				return json;
+			}
+
+			if (off + 1 >= size)
+			{
+				readBuffer();
+				continue;
+			}
+			off++;
+		}
+
+		return json;
+	}
+
+	JSONErrors RJSONStream::getError()
+	{
+		return error;
+	}
+
+	bool RJSONStream::hasError()
+	{
+		return error != JSONErrors::OK;
+	}
+
+	void RJSONStream::parseValue(JSONElement& json)
+	{
+		if (!findEndOfWhitespace())
+		{
+			errorLocation = totalSizeBefore + off - 1;
+			error = JSONErrors::UnexpectedControl_Character;
+			return;
+		}
+		switch (buffer[off])
+		{
+		case '\"':
+			json.type = JSONTypes::String;
+			off++;
+			json.value = parseString();
+			return;
+		case '-':
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+		{
+			json.type = JSONTypes::Integer;
+			// parse number
+			// find first of not a number
+			size_t start = off;
+			if (!findEndOfNumber(start, json.value))
+			{
+				errorLocation = totalSizeBefore + off - 1;
+				error = JSONErrors::UnexpectedEndOfValue;
+				return;
+			}
+			json.value.append(buffer + start, off - start);
+			return;
+		}
+		case '{':
+		{
+			JSONTypes::Object;
+			off++;
+			parseObject(json);
+			return;
+		}
+		case '[':
+		{
+			json.type = JSONTypes::Array;
+			off++;
+			parseArray(json);
+			return;
+		}
+		case 't':
+		{
+			json.type = JSONTypes::Boolean;
+			size_t start = off;
+			if (off + 3 >= size)
+			{
+				json.value.append(buffer + start, size - off);
+				readBuffer();
+				start = 0;
+				if (off + 4 + json.value.size() >= size)
+				{
+					errorLocation = totalSizeBefore + off - 1;
+					error = JSONErrors::Unexpected_Character;
+					return;
+				}
+			}
+			if (json.value.size() - 4)
+			{
+				json.value.append(buffer + start, 4 - json.value.size());
+			}
+			if (json.value != "true")
+			{
+				errorLocation = totalSizeBefore + off - 1;
+				error = JSONErrors::Unexpected_Character;
+				return;
+			}
+			off += 4;
+			return;
+		}
+		case 'f':
+		{
+			json.type = JSONTypes::Boolean;
+			size_t start = off;
+			if (off + 4 >= size)
+			{
+				json.value.append(buffer + start, size - off);
+				readBuffer();
+				if (off + 5 + json.value.size() >= size)
+				{
+					errorLocation = totalSizeBefore + off - 1;
+					error = JSONErrors::Unexpected_Character;
+					return;
+				}
+			}
+			if (json.value.size() - 5)
+			{
+				json.value.append(buffer + start, json.value.size() - 5);
+			}
+
+			if (json.value != "false")
+			{
+				errorLocation = totalSizeBefore + off - 1;
+				error = JSONErrors::Unexpected_Character;
+				return;
+			}
+			off += 5;
+			break;
+		}
+		case 'n':
+		{
+			json.type = JSONTypes::Boolean;
+			size_t start = off;
+			if (off + 3 >= size)
+			{
+				json.value.append(buffer + start, size - off);
+				readBuffer();
+				if (off + 4 + json.value.size() >= size)
+				{
+					errorLocation = totalSizeBefore + off - 1;
+					error = JSONErrors::Unexpected_Character;
+					return;
+				}
+			}
+			if (json.value.size() - 4)
+			{
+				json.value.append(buffer + start, json.value.size() - 4);
+			}
+			if (json.value != "null")
+			{
+				errorLocation = totalSizeBefore + off - 1;
+				error = JSONErrors::Unexpected_Character;
+				return;
+			}
+			off += 4;
+			break;
+		}
+		default:
+			errorLocation = totalSizeBefore + off - 1;
+			error = JSONErrors::Unexpected_Character;
+			return;
+		}
+	};
+
+	std::string RJSONStream::parseString()
+	{
+		string string;
+		size_t stringStart = off;
+		if (off + 1 >= size)
+		{
+			readBuffer();
+			stringStart = 0;
+		}
+		for (; off < size;)
+		{
+			if (buffer[off] == '\"')
+			{// found end of string
+				break;
+			}
+			// control character handling
+			if (buffer[off] == '\\')
+			{// parse control characters
+				// Add string found from stringStart to _off
+				size_t stringSize = string.size();
+				string.append(buffer + stringStart, off - stringStart);
+				if (++off == size)
+				{
+					readBuffer();
+				}
+				stringStart = off + 1;
+				switch (buffer[off])
+				{
+				case '\"':
+					string += '\"';
+					break;
+				case '\\':
+					string += '\\';
+					break;
+				case '/':
+					string += '/';
+					break;
+				case 'b':
+					string += '\b';
+					break;
+				case 'f':
+					string += '\f';
+					break;
+				case 'n':
+					string += '\n';
+					break;
+				case 'r':
+					string += '\r';
+					break;
+				case 't':
+					string += '\t';
+					break;
+				case 'u':
+				{
+					if (off + 4 >= size)
+					{
+						stringStart = 1;// set to one to be set to zero below
+						readBuffer();
+						if (size <= 4)
+						{
+							errorLocation = totalSizeBefore + off - 1;// -1 due to offset from   stringStart = _off + 1;
+							error = JSONErrors::UnexpectedControl_Character;
+							return string;
+						}
+					}
+					char hexBuff[5]{ 0 };
+					stringStart--;
+					memcpy_s(
+						hexBuff,
+						sizeof(hexBuff),
+						buffer + stringStart * sizeof(char),
+						4);
+
+					for (size_t i = 0; i < sizeof(hexBuff) / sizeof(hexBuff[0]); i++)
+					{
+						if ((hexBuff[i] < '0' || hexBuff[i] > '9') && 
+							(hexBuff[i] < 'a' || hexBuff[i] > 'f') &&
+							(hexBuff[i] < 'A' || hexBuff[i] > 'F'))
+						{
+							errorLocation = totalSizeBefore + off;
+							error = JSONErrors::UnexpectedControl_Character;
+							return string;
+						}
+
+					}
+
+					char* _Eptr;
+					const char _Ans = _CSTD strtol(hexBuff, &_Eptr, 16);
+
+					if (hexBuff == _Eptr) {
+						// invalid stoi argument
+						// to prevent injection, skip
+						stringStart += 4;
+						break;
+					}
+					string += _Ans;
+					stringStart += 4;
+					break;
+				}
+				default:
+					errorLocation = totalSizeBefore + off - 1;// -1 due to offset from   stringStart = _off + 1;
+					error = JSONErrors::UnexpectedControl_Character;
+					return string;
+				}
+			}
+			if (off + 1 >= size)
+			{
+				string.append(buffer + stringStart, size - stringStart);
+				readBuffer();
+				stringStart = 0;
+				continue;
+			}
+			off++;
+		}
+		if (off - stringStart)
+		{
+			string.append(buffer + stringStart, off - stringStart);
+		}
+		return string;
+	}
+	void RJSONStream::parseObject(JSONElement& object)
+	{
+		while (true)
+		{
+			if (!findEndOfWhitespace())
+			{
+				errorLocation = totalSizeBefore + off;
+				error = JSONErrors::Unexpected_Character;
+				return;
+			}
+			switch (buffer[off])
+			{
+			case '}':
+				return;
+			case ',':
+				off++;
+				if (!findEndOfWhitespace() || buffer[off] != '\"')
+				{
+					errorLocation = totalSizeBefore + off;
+					error = JSONErrors::Unexpected_Character;
+					return;
+				}
+				// buffer[_off] == '\"'
+				/* fallthrough */
+			case '\"':
+			{
+				JSONElement element;
+				off++;
+				element.name = parseString();
+				off++;
+				if (hasError())
+				{
+					return;
+				}
+				if (!findEndOfWhitespace())
+				{
+					errorLocation = totalSizeBefore + off;
+					error = JSONErrors::Unexpected_Character;
+					return;
+				}
+				if (buffer[off] != ':')
+				{
+					errorLocation = totalSizeBefore + off;
+					error = JSONErrors::Unexpected_Character;
+					return;
+				}
+				off++;
+				parseValue(element);
+				off++;
+				if (hasError())
+				{
+					return;
+				}
+				object.children.emplace_back(element);
+				break;
+			}
+			default:
+				errorLocation = totalSizeBefore + off;
+				error = JSONErrors::Unexpected_Character;
+				return;
+			}
+		}
+	}
+
+	void RJSONStream::parseArray(JSONElement& object)
+	{
+		while (true)
+		{
+			if (!findEndOfWhitespace())
+			{
+				errorLocation = totalSizeBefore + off;
+				error = JSONErrors::Unexpected_Character;
+				return;
+			}
+			switch (buffer[off])
+			{
+			case ']':
+				return;
+			case ',':
+				off++;
+				if (!findEndOfWhitespace())
+				{
+					errorLocation = totalSizeBefore + off;
+					error = JSONErrors::Unexpected_Character;
+					return;
+				}
+				break;
+			}
+			JSONElement value;
+			parseValue(value);
+			off++;
+			if (hasError())
+			{
+				return;
+			}
+			object.children.emplace_back(value);
+		}
+	}
+
+
+
+	bool RJSONStream::readBuffer()
+	{
+		totalSizeBefore += size;
+		fs.read(buffer, buffSize);
+		size = fs.gcount();
+		if (size)
+		{// read something
+			off = 0;
+			return true;
+		}
+		return false;
+	}
+
+	bool RJSONStream::findEndOfWhitespace()
+	{
+		do
+		{
+			for (; off < size; off++)
+			{
+				if (buffer[off] != ' ' &&
+					buffer[off] != '\t' &&
+					buffer[off] != '\r' &&
+					buffer[off] != '\n'
+					)
+				{
+					return true;
+				}
+			}
+		} while (readBuffer());
+		return false;
+	}
+
+	bool RJSONStream::findEndOfNumber(size_t& start, std::string& value)
+	{// "-0123456789.Ee+
+		do
+		{
+			for (; off < size; off++)
+			{
+				if (buffer[off] < '0' || buffer[off] > '9' && 
+					buffer[off] != '-' &&
+					buffer[off] != '.' &&
+					buffer[off] != 'E' &&
+					buffer[off] != 'e' &&
+					buffer[off] != '+'
+					)
+				{
+					return true;
+				}
+				if (off - start)
+				{
+					//continue;
+				}
+				value.append(buffer + start, off - start);
+				start = 0;
+			}
+		} while (readBuffer());
+		return false;
+	}
+
+
+
+
 	JSONElement RJSON::load(const string& _jsonStructure)
 	{
 		if (_jsonStructure.empty())
@@ -1762,5 +2283,6 @@ namespace RJSON
 			break;
 		}
 	}
+
 }
 #endif // __RJSON__

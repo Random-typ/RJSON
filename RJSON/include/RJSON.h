@@ -44,7 +44,7 @@ namespace RJSON {
 	//class JSONElementArray;
 	class JSONElementArrayPTR;
 
-	enum class JSONTypes
+	enum class JSONTypes : char
 	{
 		Unknown,
 		Integer,
@@ -57,86 +57,6 @@ namespace RJSON {
 	} typedef JSONType;
 
 	using JSONElementArray = std::vector<JSONElement>;
-
-	//class JSONElementArray : public std::vector<JSONElement>
-	//{
-	//public:
-	//	friend JSONElementArray operator+(const JSONElementArray& _right, const JSONElementArray& _left);
-	//	friend JSONElementArray operator+(const JSONElementArray& _right, const JSONElementArrayPTR& _left);
-
-	//	friend JSONElementArray operator+=(JSONElementArray& _right, const JSONElementArray& _left);
-	//	friend JSONElementArray operator+=(JSONElementArray& _right, const JSONElementArrayPTR& _left);
-	//	void addElement(JSONElement _jsonElement);
-	//	/*
-	//	friend bool				operator==(const JSONElementArray& _right, const JSONElementArray& _left);
-	//	friend bool				operator==(const JSONElementArray& _right, const JSONElementArrayPTR& _left);
-
-	//	friend bool				operator!=(const JSONElementArray& _right, const JSONElementArray& _left);
-	//	friend bool				operator!=(const JSONElementArray& _right, const JSONElementArrayPTR& _left);
-	//	*/
-	//};
-
-	//class string : public std::wstring {
-	//public:
-	//	string() : std::wstring() {}
-	//	string(const std::string& _str) : std::wstring(_str.begin(), _str.end()) {}
-	//	string(const std::wstring& _str) : std::wstring(_str) {}
-	//	string(const char* _str) : string(std::string(_str)) {}
-	//	string(const wchar_t* _str) : std::wstring(_str) {}
-	//	operator const  std::string&() {
-	//		return std::string(this->begin(), this->end());
-	//	}
-
-	//	//string operator+(const wchar_t* _str) {
-	//	//	return *this + std::wstring(_str);
-	//	//}
-
-
-	//	string operator+(const char* _str) {
-	//		string str = *this;
-	//		str.resize(str.size() + strlen(_str));
-	//		size_t converted = 0;
-	//		mbstowcs_s(&converted,
-	//			str.data() + this->size() * sizeof(wchar_t),
-	//			strlen(_str),
-	//			_str,
-	//			strlen(_str));
-	//		return str;
-	//	}
-
-	//	std::wstring ws() {
-	//		return *this;
-	//	}
-
-	//	std::string s() {
-	//		return *this;
-	//	}
-	//};
-
-	//inline string operator+(const char* _a, string _b) {
-	//	return string(_a) + _b;
-	//}
-
-	//class stringArray : public std::vector<string> {
-	//public:
-	//	stringArray() {};
-	//	stringArray(std::vector<std::string> _arr) {
-	//		for (auto& i : _arr)
-	//		{
-	//			emplace_back(string(i));
-	//		}
-	//	};
-
-
-	//	operator std::vector<std::string>() {
-	//		std::vector<std::string> arr;
-	//		for (auto& i : *this)
-	//		{
-	//			arr.emplace_back(string(i));
-	//		}
-	//		return arr;
-	//	}
-	//};
 
 	using string = std::string;
 	using stringArray = std::vector<std::string>;
@@ -159,7 +79,7 @@ namespace RJSON {
 		*/
 	};
 
-	enum class JSONErrors
+	enum class JSONErrors : char
 	{
 		OK,
 		Unexpected_Character,
@@ -207,7 +127,7 @@ if (_off == string::npos)\
 
 		void							copyError(const JSONElement& _elem);
 		bool							hasError() const;
-		string						getErrorText() const;
+		string							getErrorText() const;
 
 		// Retrieves child element by it's name
 		// @param _name: Element name
@@ -280,7 +200,7 @@ if (_off == string::npos)\
 
 		// Convert this element to a json wstring
 		// @return string
-		string						asJSON(bool _formatted = false, string _whitespace = "\t") const;
+		string							asJSON(bool _formatted = false, string _whitespace = "\t") const;
 
 		// Get element type
 		// @return JSONType
@@ -299,14 +219,14 @@ if (_off == string::npos)\
 
 		// get the element value as wstring
 		// @return string
-		string						valueAsString() const;
+		string							valueAsString() const;
 
 		// get the element value as bool
 		// @return bool
 		bool							valueAsBool() const;
 		// get children values as array
 		// @return std::vector<string>
-		stringArray			asArray() const;
+		stringArray						asArray() const;
 
 		void							fixValue();
 
@@ -335,8 +255,8 @@ if (_off == string::npos)\
 		JSONElement&					operator=(const char* _value);
 		JSONElement&					operator=(const JSONElement& _json);
 
-		string						name;
-		string					value;
+		string							name;
+		string							value;
 		JSONElementArray				children;
 		JSONType						type = JSONTypes::Object;
 
@@ -351,6 +271,39 @@ if (_off == string::npos)\
 		string						rawValue() const;
 	};
 
+	class RJSONStream {
+	public:
+		RJSONStream(size_t bufferSize = defaultBufferSize);
+		~RJSONStream();
+		
+		JSONElement parseStream(const char* _path);
+
+		JSONErrors getError();
+		bool hasError();
+
+
+		static size_t defaultBufferSize;
+	private:
+		JSONElement parseStream();
+		void parseValue(JSONElement& json);
+		std::string parseString();
+		void parseObject(JSONElement& object);
+		void parseArray(JSONElement& object);
+
+		bool readBuffer();
+		bool findEndOfWhitespace();
+		bool findEndOfNumber(size_t& start, std::string& value);
+
+
+		JSONErrors error = JSONErrors::OK;
+		size_t errorLocation = 0;
+		size_t totalSizeBefore = 0;
+		size_t off = 0;
+		size_t size = 0;
+		size_t buffSize = 0;
+		char* buffer = nullptr;
+		std::fstream fs;
+	};
 
 	class RJSON
 	{
