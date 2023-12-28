@@ -88,7 +88,8 @@ namespace RJSON {
 	class HeapString {
 	public:
 		HeapString() : str(nullptr) {};
-		HeapString(const HeapString& _heapString) : str(_heapString.getPtr()) {};
+		// copying is expensive dont do it
+		HeapString(const HeapString& _heapString);
 		HeapString(const char* _str);
 		HeapString(const char* _str, size_t _len);
 

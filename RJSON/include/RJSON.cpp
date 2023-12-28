@@ -247,7 +247,7 @@ namespace RJSON
 
 	JSONElement& JSONElement::addChild(const char* _name, const std::vector<long long>& _array)
 	{
-		JSONElement elem;
+		JSONElement& elem = children.emplace_back();
 		elem.setName(_name);
 		for (auto& i : _array)
 		{
@@ -256,62 +256,54 @@ namespace RJSON
 			element.setValue(i);
 		}
 		elem.type = JSONType::Array;
-		children.emplace_back(elem);
-		return children.back();
+		return elem;
 	}
 
 	JSONElement& JSONElement::addChild(const char* _name, const std::vector<int>& _array)
 	{
-		JSONElement elem;
+		JSONElement elem = children.emplace_back();
 		elem.setName(_name);
 		for (auto& i : _array)
 		{
-			JSONElement element;
+			JSONElement& element = elem.children.emplace_back();
 			element.type = JSONType::Integer;
 			element.setValue((long long)i);
-			elem.children.emplace_back(element);
 		}
 		elem.type = JSONType::Array;
-		children.emplace_back(elem);
-		return children.back();
+		return elem;
 	}
 
 	JSONElement& JSONElement::addChild(const char* _name, const std::vector<long double>& _array)
 	{
-		JSONElement elem;
+		JSONElement& elem = children.emplace_back();
 		elem.setName(_name);
 		for (auto& i : _array)
 		{
-			JSONElement element;
+			JSONElement element = elem.children.emplace_back();
 			element.type = JSONType::Float;
 			element.setValue(i);
-			elem.children.emplace_back(element);
 		}
 		elem.type = JSONType::Array;
-		children.emplace_back(elem);
-		return children.back();
+		return elem;
 	}
 
 	JSONElement& JSONElement::addChild(const char* _name, const std::vector<bool>& _array)
 	{
-		JSONElement elem;
+		JSONElement& elem = children.emplace_back();
 		elem.setName(_name);
 		for (auto i : _array)
 		{
-			JSONElement element;
+			JSONElement element = elem.children.emplace_back();
 			element.type = JSONType::Boolean;
 			element.setValue(i);
-			elem.children.emplace_back(element);
 		}
 		elem.type = JSONType::Array;
-		children.emplace_back(elem);
-		return children.back();
+		return elem;
 	}
 
 	JSONElement& JSONElement::addChild(const JSONElement& _jsonElement)
 	{
-		children.emplace_back(_jsonElement);
-		return children.back();
+		return children.emplace_back(_jsonElement);
 	}
 
 	bool JSONElement::removeChild(const char* _name)
@@ -1980,6 +1972,11 @@ namespace RJSON
 	void JSONData::setNull()
 	{
 		setType(JSONTypes::Null);
+	}
+
+	HeapString::HeapString(const HeapString& _heapString)
+	{
+		setStr(_heapString);
 	}
 
 	HeapString::HeapString(const char* _str) : HeapString(_str, strlen(_str))
