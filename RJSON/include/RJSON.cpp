@@ -11,10 +11,9 @@ namespace RJSON
 	JSONElement::JSONElement(const JSONElement& _elem)
 		:
 		children(_elem.children),
-		type(_elem.type),
-		error(_elem.error),
-		errorLocation(_elem.errorLocation)
+		error(_elem.error)
 	{
+		setType(_elem.getType());
 		setName(_elem.getName());
 		data.copyData(_elem.data);
 		data = _elem.data;
@@ -28,25 +27,26 @@ namespace RJSON
 
 	JSONElement::JSONElement(long long _val) {
 		setValue(_val);
-		type = JSONTypes::Integer;
+		setType(JSONTypes::Integer);
 	}
 
 	JSONElement::JSONElement(long double _val) {
 		setValue(_val);
-		type = JSONTypes::Float;
+		setType(JSONTypes::Float);
 	}
 
 	JSONElement::JSONElement(bool _val) {
-		type = JSONTypes::Boolean;
+		setType(JSONTypes::Boolean);
 		setValue(_val);
 	}
 
 	JSONElement::JSONElement(const JSONElementArray& _elements) : children(_elements) {
-		type = JSONTypes::Object;
+		setType(JSONTypes::Object);
 	}
 
 	JSONElement::JSONElement(const char* _name, JSONType _type)
-		: type(_type) {
+	{
+		setType(_type);
 		setName(_name);
 	}
 
@@ -54,24 +54,25 @@ namespace RJSON
 	JSONElement::JSONElement(const char* _name, long long _val) {
 		setName(_name);
 		setValue(_val);
-		type = JSONTypes::Integer;
+		setType(JSONTypes::Integer);
 	}
 
 	JSONElement::JSONElement(const char* _name, long double _val) {
 		setName(_name);
 		setValue(_val);
-		type = JSONTypes::Float;
+		setType(JSONTypes::Float);
 	}
 
 	JSONElement::JSONElement(const char* _name, bool _val) {
 		setName(_name);
-		type = JSONTypes::Boolean;
+		setType(JSONTypes::Boolean);
 		setValue(_val);
 	}
 
 	JSONElement::JSONElement(const char* _name, JSONElementArray _json, JSONType _type) :
-		children(_json),
-		type(_type){
+		children(_json)
+	{
+		setType(_type);
 		setName(_name);
 	}
 
@@ -79,7 +80,7 @@ namespace RJSON
 	{
 		setName(_name);
 		setValue(_val.c_str());
-		type = JSONTypes::String;
+		setType(JSONTypes::String);
 	}
 
 	JSONElement::~JSONElement()
@@ -91,17 +92,16 @@ namespace RJSON
 	void JSONElement::copyError(const JSONElement& _elem)
 	{
 		error = _elem.error;
-		errorLocation = _elem.errorLocation;
 	}
 
 	bool JSONElement::hasError() const
 	{
-		return error != JSONErrors::OK;
+		return error.error != JSONErrors::OK;
 	}
 	string JSONElement::getErrorText() const
 	{
 		string text;
-		switch (error)
+		switch (error.error)
 		{
 		case JSONErrors::OK:
 			return text;
@@ -127,7 +127,7 @@ namespace RJSON
 			text = "An unhandled exception was thrown.";
 			return text;
 		}
-		text += std::to_string(errorLocation) + ".";
+		text += std::to_string(error.location) + ".";
 		return text;
 	}
 
@@ -137,7 +137,7 @@ namespace RJSON
 			if (elem.getName() == _name)
 				return elem;
 		RJSON::EmptyElem.error = error;
-		RJSON::EmptyElem.errorLocation = errorLocation;
+		RJSON::EmptyElem.error.location = error.location;
 		return RJSON::EmptyElem;
 	}
 
@@ -171,7 +171,7 @@ namespace RJSON
 		JSONElement& elem = children.emplace_back();
 		elem.setName(_name);
 		elem.setValue(_value.c_str());
-		elem.type = _type;
+		elem.setType(_type);
 		return children.back();
 	}
 	
@@ -180,7 +180,7 @@ namespace RJSON
 		JSONElement elem;
 		elem.setName(_name);
 		elem.setValue(_value);
-		elem.type = _type;
+		elem.setType(_type);
 		children.emplace_back(elem);
 		return children.back();
 	}
@@ -228,7 +228,7 @@ namespace RJSON
 	{
 		JSONElement& elem = children.emplace_back(_name);
 		elem.children = _elements;
-		elem.type = JSONType::Array;
+		elem.setType(JSONType::Array);
 		return elem;
 	}
 
@@ -238,10 +238,10 @@ namespace RJSON
 		for (auto& i : _array)
 		{
 			JSONElement& element = elem.children.emplace_back();
-			element.type = JSONType::String;
+			element.setType(JSONType::String);
 			element.setValue(i.c_str());
 		}
-		elem.type = JSONType::Array;
+		elem.setType(JSONType::Array);
 		return elem;
 	}
 
@@ -252,10 +252,10 @@ namespace RJSON
 		for (auto& i : _array)
 		{
 			JSONElement& element = elem.children.emplace_back();
-			element.type = JSONType::Integer;
+			element.setType(JSONType::Integer);
 			element.setValue(i);
 		}
-		elem.type = JSONType::Array;
+		elem.setType(JSONType::Array);
 		return elem;
 	}
 
@@ -266,10 +266,10 @@ namespace RJSON
 		for (auto& i : _array)
 		{
 			JSONElement& element = elem.children.emplace_back();
-			element.type = JSONType::Integer;
+			element.setType(JSONType::Integer);
 			element.setValue((long long)i);
 		}
-		elem.type = JSONType::Array;
+		elem.setType(JSONType::Array);
 		return elem;
 	}
 
@@ -280,10 +280,10 @@ namespace RJSON
 		for (auto& i : _array)
 		{
 			JSONElement element = elem.children.emplace_back();
-			element.type = JSONType::Float;
+			element.setType(JSONType::Float);
 			element.setValue(i);
 		}
-		elem.type = JSONType::Array;
+		elem.setType(JSONType::Array);
 		return elem;
 	}
 
@@ -294,10 +294,10 @@ namespace RJSON
 		for (auto i : _array)
 		{
 			JSONElement element = elem.children.emplace_back();
-			element.type = JSONType::Boolean;
+			element.setType(JSONType::Boolean);
 			element.setValue(i);
 		}
-		elem.type = JSONType::Array;
+		elem.setType(JSONType::Array);
 		return elem;
 	}
 
@@ -376,7 +376,7 @@ namespace RJSON
 		{
 			return asJSONInner();
 		}
-		/*if (type == JSONTypes::Array)
+		/*if (getType() == JSONTypes::Array)
 		{
 			return "[" + asJSONInner() + "]";
 		}*/
@@ -391,7 +391,7 @@ namespace RJSON
 			return asJSONInnerFormatted(_indent, _whitespace);
 		}
 		_indent += _whitespace;
-		if (type == JSONTypes::Array)
+		if (getType() == JSONTypes::Array)
 		{
 			string front = "[\n" + asJSONInnerFormatted(_indent, _whitespace);
 			_indent.pop_back();
@@ -409,13 +409,13 @@ namespace RJSON
 		{
 			json += _indent + "\"" + getName() + "\": ";
 		}
-		if (type == JSONTypes::Array)
+		if (getType() == JSONTypes::Array)
 		{
 			json += "[\n";
 			_indent += _whitespace;
 		}
 		else
-			if (type == JSONTypes::Object)
+			if (getType() == JSONTypes::Object)
 			{
 				json += "{\n";
 				_indent += _whitespace;
@@ -427,7 +427,7 @@ namespace RJSON
 			}
 		for (size_t i = 0; i < children.size();)
 		{
-			if (type == JSONTypes::Array)
+			if (getType() == JSONTypes::Array)
 			{
 				json += _indent;
 			}
@@ -439,12 +439,12 @@ namespace RJSON
 			}
 			json += '\n';
 		}
-		if (type == JSONTypes::Array)
+		if (getType() == JSONTypes::Array)
 		{
 			_indent.pop_back();
 			json += _indent + ']';
 		}
-		if (type == JSONTypes::Object)
+		if (getType() == JSONTypes::Object)
 		{
 			_indent.pop_back();
 			json += _indent + '}';
@@ -459,12 +459,12 @@ namespace RJSON
 		{
 			json += std::string("\"") + getName() + "\":";
 		}
-		if (type == JSONTypes::Array)
+		if (getType() == JSONTypes::Array)
 		{
 			json += "[";
 		}
 		else
-		if (type == JSONTypes::Object)
+		if (getType() == JSONTypes::Object)
 		{
 			json += "{";
 		}
@@ -482,11 +482,11 @@ namespace RJSON
 				json += ",";
 			}
 		}
-		if (type == JSONTypes::Array)
+		if (getType() == JSONTypes::Array)
 		{
 			json += "]";
 		}
-		if (type == JSONTypes::Object)
+		if (getType() == JSONTypes::Object)
 		{
 			json += "}";
 		}
@@ -495,7 +495,7 @@ namespace RJSON
 
 	string JSONElement::valueAsFormattedString() const
 	{// check for control characters
-		switch (type)
+		switch (getType())
 		{
 		case JSONTypes::Integer:
 			return std::to_string(valueAsInt());
@@ -555,7 +555,12 @@ namespace RJSON
 
 	JSONType JSONElement::getType() const
 	{
-		return type;
+		return data.getType();
+	}
+
+	void JSONElement::setType(JSONType _type)
+	{
+		data.setType(_type);
 	}
 
 	void JSONElement::autoType()
@@ -565,10 +570,10 @@ namespace RJSON
 		//{
 		//	if (children.front().getName())
 		//	{
-		//		type = JSONTypes::Array;
+		//		setType(JSONTypes::Array;
 		//	}
 		//	else
-		//		type = JSONTypes::Object;
+		//		setType(JSONTypes::Object;
 		//	return;
 		//}
 
@@ -576,33 +581,33 @@ namespace RJSON
 		//{// The type could be anything 
 		//	if (!hasName())
 		//	{
-		//		type = JSONTypes::Unknown;
+		//		setType(JSONTypes::Unknown;
 		//	}
 		//	else
-		//		type = JSONTypes::String;
+		//		setType(JSONTypes::String;
 		//	return;
 		//}
 		//if (value.find_first_not_of("-1234567890.") == string::npos)// e and E are not included here
 		//{// Number
 		//	if (value.find('.') != string::npos)
 		//	{// Float
-		//		type = JSONTypes::Float;
+		//		setType(JSONTypes::Float;
 		//	}
-		//	type = JSONTypes::Integer;
+		//	setType(JSONTypes::Integer;
 		//	return;
 		//}
 		//if (value == "true" || value == "false")
 		//{// Boolean
-		//	type = JSONTypes::Null;
+		//	setType(JSONTypes::Null;
 		//	return;
 		//}
 		//if (value == "null")
 		//{
-		//	type = JSONTypes::Null;
+		//	setType(JSONTypes::Null;
 		//	return;
 		//}
 		//// String
-		//type = JSONTypes::String;
+		//setType(JSONTypes::String;
 		//return;
 	}
 
@@ -638,7 +643,7 @@ namespace RJSON
 
 	void JSONElement::fixValue()
 	{
-		if (type != JSONTypes::String && type != JSONTypes::Unknown)
+		if (getType() != JSONTypes::String && getType() != JSONTypes::Unknown)
 		{
 			return;
 		}
@@ -653,32 +658,32 @@ namespace RJSON
 
 	bool JSONElement::isInteger()
 	{
-		return type == JSONTypes::Integer;
+		return getType() == JSONTypes::Integer;
 	}
 
 	bool JSONElement::isFloat()
 	{
-		return type == JSONTypes::Float;
+		return getType() == JSONTypes::Float;
 	}
 
 	bool JSONElement::isString()
 	{
-		return type == JSONTypes::String;
+		return getType() == JSONTypes::String;
 	}
 
 	bool JSONElement::isBool()
 	{
-		return type == JSONTypes::Boolean;
+		return getType() == JSONTypes::Boolean;
 	}
 
 	bool JSONElement::isNull()
 	{
-		return type == JSONTypes::Null;
+		return getType() == JSONTypes::Null;
 	}
 
 	bool JSONElement::isObject()
 	{
-		return type == JSONTypes::Object;
+		return getType() == JSONTypes::Object;
 	}
 
 	bool JSONElement::isArray()
@@ -699,20 +704,20 @@ namespace RJSON
 	JSONElement& JSONElement::operator=(size_t _value)
 	{
 		setValue((long long)_value);
-		type = JSONTypes::Integer;
+		setType(JSONTypes::Integer);
 		return *this;
 	}
 
 	JSONElement& JSONElement::operator=(long double _value)
 	{
 		setValue(_value);
-		type = JSONTypes::Float;
+		setType(JSONTypes::Float);
 		return *this;
 	}
 
 	JSONElement& JSONElement::operator=(bool _value)
 	{
-		type = JSONTypes::Boolean;
+		setType(JSONTypes::Boolean);
 		setValue(_value);
 		return *this;
 	}
@@ -720,7 +725,7 @@ namespace RJSON
 	JSONElement& JSONElement::operator=(const char* _value)
 	{
 		setValue(_value);
-		type = JSONTypes::String;
+		setType(JSONTypes::String);
 		return *this;
 	}
 
@@ -729,10 +734,10 @@ namespace RJSON
 		setName(_json.getName());
 		data.copyData(_json.data);
 		children = _json.children;
-		type = _json.type;
+		setType(_json.getType());
 
 		error = _json.error;
-		errorLocation = _json.errorLocation;
+		error.location = _json.error.location;
 		return *this;
 	}
 
@@ -953,14 +958,14 @@ namespace RJSON
 		fs.open(_path);
 		if (!fs.is_open())
 		{
-			elem.error = JSONErrors::FailedToOpenFile;
+			elem.error.error = JSONErrors::FailedToOpenFile;
 			return elem;
 		}
 		elem = parseStream();
 		if (hasError())
 		{
-			elem.error = error;
-			elem.errorLocation = errorLocation;
+			elem.error.error = error.error;
+			elem.error.location = error.location;
 		}
 		fs.close();
 		return elem;
@@ -983,18 +988,18 @@ namespace RJSON
 			switch (buffer[off])
 			{
 			case '{':
-				json.type = JSONTypes::Object;
+				json.setType(JSONTypes::Object);
 				off++;
 				parseObject(json);
 				return json;
 			case '[':
-				json.type = JSONTypes::Array;
+				json.setType(JSONTypes::Array);
 				off++;
 				parseArray(json);
 				return json;
 			default:
-				json.errorLocation = totalSizeBefore + off;
-				json.error = JSONErrors::Unexpected_Character;
+				json.error.location = totalSizeBefore + off;
+				json.error.error = JSONErrors::Unexpected_Character;
 				return json;
 			}
 
@@ -1011,26 +1016,26 @@ namespace RJSON
 
 	JSONErrors RJSONStream::getError()
 	{
-		return error;
+		return error.error;
 	}
 
 	bool RJSONStream::hasError()
 	{
-		return error != JSONErrors::OK;
+		return error.error != JSONErrors::OK;
 	}
 
 	void RJSONStream::parseValue(JSONElement& json)
 	{
 		if (!findEndOfWhitespace())
 		{
-			errorLocation = totalSizeBefore + off - 1;
-			error = JSONErrors::UnexpectedControl_Character;
+			error.location = totalSizeBefore + off - 1;
+			error.error = JSONErrors::UnexpectedControl_Character;
 			return;
 		}
 		switch (buffer[off])
 		{
 		case '\"':
-			json.type = JSONTypes::String;
+			json.setType(JSONTypes::String);
 			off++;
 			json.setValuePtr(parseString());
 			return;
@@ -1046,14 +1051,14 @@ namespace RJSON
 		case '8':
 		case '9':
 		{
-			json.type = JSONTypes::Integer;
+			json.setType(JSONTypes::Integer);
 			// parse number
 			// find first of not a number
 			size_t start = off;
 			if (!findEndOfNumber(start, json.getValueHeapStr()))
 			{
-				errorLocation = totalSizeBefore + off - 1;
-				error = JSONErrors::UnexpectedEndOfValue;
+				error.location = totalSizeBefore + off - 1;
+				error.error = JSONErrors::UnexpectedEndOfValue;
 				return;
 			}
 			json.getValueHeapStr().append(buffer + start, off - start);
@@ -1068,14 +1073,14 @@ namespace RJSON
 		}
 		case '[':
 		{
-			json.type = JSONTypes::Array;
+			json.setType(JSONTypes::Array);
 			off++;
 			parseArray(json);
 			return;
 		}
 		case 't':
 		{
-			json.type = JSONTypes::Boolean;
+			json.setType(JSONTypes::Boolean);
 			size_t start = off;
 			if (off + 3 >= size)
 			{
@@ -1084,8 +1089,8 @@ namespace RJSON
 				start = 0;
 				if (off + 4 + json.getValueHeapStr().size() >= size)
 				{
-					errorLocation = totalSizeBefore + off - 1;
-					error = JSONErrors::Unexpected_Character;
+					error.location = totalSizeBefore + off - 1;
+					error.error = JSONErrors::Unexpected_Character;
 					return;
 				}
 			}
@@ -1095,8 +1100,8 @@ namespace RJSON
 			}
 			if (json.getValueHeapStr() != "true")
 			{
-				errorLocation = totalSizeBefore + off - 1;
-				error = JSONErrors::Unexpected_Character;
+				error.location = totalSizeBefore + off - 1;
+				error.error = JSONErrors::Unexpected_Character;
 				return;
 			}
 			off += 4;
@@ -1104,7 +1109,7 @@ namespace RJSON
 		}
 		case 'f':
 		{
-			json.type = JSONTypes::Boolean;
+			json.setType(JSONTypes::Boolean);
 			size_t start = off;
 			if (off + 4 >= size)
 			{
@@ -1112,8 +1117,8 @@ namespace RJSON
 				readBuffer();
 				if (off + 5 + json.getValueHeapStr().size() >= size)
 				{
-					errorLocation = totalSizeBefore + off - 1;
-					error = JSONErrors::Unexpected_Character;
+					error.location = totalSizeBefore + off - 1;
+					error.error = JSONErrors::Unexpected_Character;
 					return;
 				}
 			}
@@ -1124,8 +1129,8 @@ namespace RJSON
 
 			if (json.getValueHeapStr() != "false")
 			{
-				errorLocation = totalSizeBefore + off - 1;
-				error = JSONErrors::Unexpected_Character;
+				error.location = totalSizeBefore + off - 1;
+				error.error = JSONErrors::Unexpected_Character;
 				return;
 			}
 			off += 5;
@@ -1133,7 +1138,7 @@ namespace RJSON
 		}
 		case 'n':
 		{
-			json.type = JSONTypes::Boolean;
+			json.setType(JSONTypes::Boolean);
 			size_t start = off;
 			if (off + 3 >= size)
 			{
@@ -1141,8 +1146,8 @@ namespace RJSON
 				readBuffer();
 				if (off + 4 + json.getValueHeapStr().size() >= size)
 				{
-					errorLocation = totalSizeBefore + off - 1;
-					error = JSONErrors::Unexpected_Character;
+					error.location = totalSizeBefore + off - 1;
+					error.error = JSONErrors::Unexpected_Character;
 					return;
 				}
 			}
@@ -1152,16 +1157,16 @@ namespace RJSON
 			}
 			if (json.getValueHeapStr() != "null")
 			{
-				errorLocation = totalSizeBefore + off - 1;
-				error = JSONErrors::Unexpected_Character;
+				error.location = totalSizeBefore + off - 1;
+				error.error = JSONErrors::Unexpected_Character;
 				return;
 			}
 			off += 4;
 			break;
 		}
 		default:
-			errorLocation = totalSizeBefore + off - 1;
-			error = JSONErrors::Unexpected_Character;
+			error.location = totalSizeBefore + off - 1;
+			error.error = JSONErrors::Unexpected_Character;
 			return;
 		}
 	};
@@ -1226,8 +1231,8 @@ namespace RJSON
 						readBuffer();
 						if (size <= 4)
 						{
-							errorLocation = totalSizeBefore + off - 1;// -1 due to offset from   stringStart = _off + 1;
-							error = JSONErrors::UnexpectedControl_Character;
+							error.location = totalSizeBefore + off - 1;// -1 due to offset from   stringStart = _off + 1;
+							error.error = JSONErrors::UnexpectedControl_Character;
 							return string;
 						}
 					}
@@ -1245,8 +1250,8 @@ namespace RJSON
 							(hexBuff[i] < 'a' || hexBuff[i] > 'f') &&
 							(hexBuff[i] < 'A' || hexBuff[i] > 'F'))
 						{
-							errorLocation = totalSizeBefore + off;
-							error = JSONErrors::UnexpectedControl_Character;
+							error.location = totalSizeBefore + off;
+							error.error = JSONErrors::UnexpectedControl_Character;
 							return string.getPtr();
 						}
 
@@ -1266,8 +1271,8 @@ namespace RJSON
 					break;
 				}
 				default:
-					errorLocation = totalSizeBefore + off - 1;// -1 due to offset from   stringStart = _off + 1;
-					error = JSONErrors::UnexpectedControl_Character;
+					error.location = totalSizeBefore + off - 1;// -1 due to offset from   stringStart = _off + 1;
+					error.error = JSONErrors::UnexpectedControl_Character;
 					return string;
 				}
 			}
@@ -1292,8 +1297,8 @@ namespace RJSON
 		{
 			if (!findEndOfWhitespace())
 			{
-				errorLocation = totalSizeBefore + off;
-				error = JSONErrors::Unexpected_Character;
+				error.location = totalSizeBefore + off;
+				error.error = JSONErrors::Unexpected_Character;
 				return;
 			}
 			switch (buffer[off])
@@ -1304,8 +1309,8 @@ namespace RJSON
 				off++;
 				if (!findEndOfWhitespace() || buffer[off] != '\"')
 				{
-					errorLocation = totalSizeBefore + off;
-					error = JSONErrors::Unexpected_Character;
+					error.location = totalSizeBefore + off;
+					error.error = JSONErrors::Unexpected_Character;
 					return;
 				}
 				// buffer[_off] == '\"'
@@ -1321,14 +1326,14 @@ namespace RJSON
 				}
 				if (!findEndOfWhitespace())
 				{
-					errorLocation = totalSizeBefore + off;
-					error = JSONErrors::Unexpected_Character;
+					error.location = totalSizeBefore + off;
+					error.error = JSONErrors::Unexpected_Character;
 					return;
 				}
 				if (buffer[off] != ':')
 				{
-					errorLocation = totalSizeBefore + off;
-					error = JSONErrors::Unexpected_Character;
+					error.location = totalSizeBefore + off;
+					error.error = JSONErrors::Unexpected_Character;
 					return;
 				}
 				off++;
@@ -1341,8 +1346,8 @@ namespace RJSON
 				break;
 			}
 			default:
-				errorLocation = totalSizeBefore + off;
-				error = JSONErrors::Unexpected_Character;
+				error.location = totalSizeBefore + off;
+				error.error = JSONErrors::Unexpected_Character;
 				return;
 			}
 		}
@@ -1354,8 +1359,8 @@ namespace RJSON
 		{
 			if (!findEndOfWhitespace())
 			{
-				errorLocation = totalSizeBefore + off;
-				error = JSONErrors::Unexpected_Character;
+				error.location = totalSizeBefore + off;
+				error.error = JSONErrors::Unexpected_Character;
 				return;
 			}
 			switch (buffer[off])
@@ -1366,8 +1371,8 @@ namespace RJSON
 				off++;
 				if (!findEndOfWhitespace())
 				{
-					errorLocation = totalSizeBefore + off;
-					error = JSONErrors::Unexpected_Character;
+					error.location = totalSizeBefore + off;
+					error.error = JSONErrors::Unexpected_Character;
 					return;
 				}
 				break;
@@ -1451,8 +1456,8 @@ namespace RJSON
 		if (_jsonStructure.empty())
 		{
 			JSONElement json;
-			json.error = JSONErrors::JSONisEmpty;
-			json.errorLocation = 0;
+			json.error.error = JSONErrors::JSONisEmpty;
+			json.error.location = 0;
 			return json;
 		}
 		try
@@ -1463,8 +1468,8 @@ namespace RJSON
 		catch (const std::exception&)
 		{
 			JSONElement json;
-			json.error = JSONErrors::UnhandledException;
-			json.errorLocation = 0;
+			json.error.error = JSONErrors::UnhandledException;
+			json.error.location = 0;
 			return json;
 		}
 	}
@@ -1492,7 +1497,7 @@ namespace RJSON
 			AfterWhiteSpace;
 			while (_data[_off] != '}' && _data[_off] != ']')
 			{
-				elem.type = JSONTypes::Object;
+				elem.setType(JSONTypes::Object);
 				elem.children.emplace_back(parse(_data, _off));
 				if (elem.children.back().hasError())
 				{// error
@@ -1513,7 +1518,7 @@ namespace RJSON
 			}
 			return elem;
 		case '[':
-			elem.type = JSONTypes::Array;
+			elem.setType(JSONTypes::Array);
 			_off++;
 			break;
 		case '}':
@@ -1526,7 +1531,7 @@ namespace RJSON
 		AfterWhiteSpace;
 
 		// array parsing
-		while (elem.type == JSONTypes::Array)
+		while (elem.getType() == JSONTypes::Array)
 		{
 			if (_data[_off] == '{' || _data[_off] == '[')
 			{
@@ -1603,12 +1608,12 @@ namespace RJSON
 				switch (_data[_off])
 				{
 				case '{':
-					elem.type = JSONTypes::Object;
+					elem.setType(JSONTypes::Object);
 					/*fallthrough*/
 				case '[':
 					if (_data[_off] == '[')
 					{
-						elem.type = JSONTypes::Array;
+						elem.setType(JSONTypes::Array);
 					}
 					if (_data[_off + 1] == ']')
 					{
@@ -1628,8 +1633,8 @@ namespace RJSON
 				return elem;
 			default:
 				// error
-				elem.error = JSONErrors::MissingColon;
-				elem.errorLocation = _off;
+				elem.error.error = JSONErrors::MissingColon;
+				elem.error.location = _off;
 				return elem;
 				break;
 			}
@@ -1638,8 +1643,8 @@ namespace RJSON
 		case ']':
 				break;
 		default:
-			elem.error = JSONErrors::Unexpected_Character;
-			elem.errorLocation = _off;
+			elem.error.error = JSONErrors::Unexpected_Character;
+			elem.error.location = _off;
 			break;
 		}
 		return elem;
@@ -1652,8 +1657,8 @@ namespace RJSON
 		size_t start = _off + 1;
 		_off = _data.find_first_of("\\\"", _off + 1);
 		if (_off == string::npos) {
-			_elem.error = JSONErrors::UnexpectedEndOfString;
-			_elem.errorLocation = start;
+			_elem.error.error = JSONErrors::UnexpectedEndOfString;
+			_elem.error.location = start;
 			return string();
 		}
 		
@@ -1662,8 +1667,8 @@ namespace RJSON
 			name += _data.substr(start, _off - start);
 			_off++;
 			if (_off == string::npos) {
-				_elem.error = JSONErrors::UnexpectedEndOfString;
-				_elem.errorLocation = start;
+				_elem.error.error = JSONErrors::UnexpectedEndOfString;
+				_elem.error.location = start;
 				return string();
 			}
 			switch (_data[_off])
@@ -1698,8 +1703,8 @@ namespace RJSON
 				break;
 			default:
 				// error
-				_elem.error = JSONErrors::UnexpectedControl_Character;
-				_elem.errorLocation = _off;
+				_elem.error.error = JSONErrors::UnexpectedControl_Character;
+				_elem.error.location = _off;
 				return string();
 			}
 			goto parseName;
@@ -1719,7 +1724,7 @@ namespace RJSON
 		{
 		case '"':
 			_elem.setValue(parseString(_elem, _data, _off).c_str());
-			_elem.type = JSONTypes::String;
+			_elem.setType(JSONTypes::String);
 			break;
 		case '0':
 		case '1':
@@ -1733,8 +1738,8 @@ namespace RJSON
 		case '9':
 			_off = _data.find_first_of(string(JSONWhitespace) + ",}]", _off);
 			if (_off == string::npos) {
-				_elem.errorLocation = _off;
-				_elem.error = JSONErrors::UnexpectedEndOfString;
+				_elem.error.location = _off;
+				_elem.error.error = JSONErrors::UnexpectedEndOfString;
 				return;
 			}
 			{
@@ -1743,12 +1748,12 @@ namespace RJSON
 
 				if (num.find('.') != string::npos)
 				{
-					_elem.type = JSONTypes::Float;
+					_elem.setType(JSONTypes::Float);
 					_elem.setValue(strtold(num.c_str(), nullptr));
 					break;
 				}
 				_elem.setValue(strtoll(num.c_str(), nullptr, 10));
-				_elem.type = JSONTypes::Integer;
+				_elem.setType(JSONTypes::Integer);
 				break;
 			}
 		case 't':
@@ -1766,18 +1771,18 @@ namespace RJSON
 				_elem.setValue(true);
 
 			}
-			_elem.type = JSONTypes::Boolean;
+			_elem.setType(JSONTypes::Boolean);
 			break;
 		}
 		case 'n':
 			_off = _data.find_first_of(string(JSONWhitespace) + ",}]", _off);
 			if (_off == string::npos) return;
 			_elem.setValueNull();
-			_elem.type = JSONTypes::Null;
+			_elem.setType(JSONTypes::Null);
 			break;
 		default:
-			_elem.error = JSONErrors::Unexpected_Character;
-			_elem.errorLocation = _off;
+			_elem.error.error = JSONErrors::Unexpected_Character;
+			_elem.error.location = _off;
 			break;
 		}
 	}
@@ -1788,7 +1793,7 @@ namespace RJSON
 		{
 			delete array;
 		}
-		if (type == JSONTypes::String)
+		if (getType() == JSONTypes::String)
 		{
 			string.free();
 		}
@@ -1797,7 +1802,7 @@ namespace RJSON
 
 	void JSONData::copyData(const JSONData& _data)
 	{
-		if (_data.type == JSONTypes::String)
+		if (_data.getType() == JSONTypes::String)
 		{
 			setString(_data.getStringPtr());
 		}
@@ -1875,7 +1880,7 @@ namespace RJSON
 
 	const char* JSONData::getStringPtr() const
 	{
-		if (type != JSONTypes::String)
+		if (getType() != JSONTypes::String)
 		{
 			return "";
 		}
@@ -1896,7 +1901,7 @@ namespace RJSON
 
 	long long JSONData::getInteger() const
 	{
-		if (type != JSONTypes::Integer)
+		if (getType() != JSONTypes::Integer)
 		{
 			return 0;
 		}
@@ -1911,7 +1916,7 @@ namespace RJSON
 
 	long double JSONData::getDouble() const
 	{
-		if (type != JSONTypes::Float)
+		if (getType() != JSONTypes::Float)
 		{
 			return 0;
 		}
@@ -1926,7 +1931,7 @@ namespace RJSON
 
 	bool JSONData::getBool() const
 	{
-		if (type != JSONTypes::Boolean)
+		if (getType() != JSONTypes::Boolean)
 		{
 			return false;
 		}
@@ -1941,20 +1946,11 @@ namespace RJSON
 
 	JSONElementArray* JSONData::getArrayPtr() const
 	{
-		if (type != JSONTypes::Array)
+		if (getType() != JSONTypes::Array)
 		{
 			return nullptr;
 		}
 		return array;
-	}
-
-	JSONElementArray& JSONData::getArray() const
-	{
-		if (type != JSONTypes::Array)
-		{
-			return EmptyJSONArray;
-		}
-		return *array;
 	}
 
 	void JSONData::setArray(JSONElementArray& _array)
@@ -2004,7 +2000,7 @@ namespace RJSON
 	void HeapString::setStr(const char* _str, size_t _len)
 	{
 		str = new char[_len + 1];
-		std::cout << "alloc " << (size_t)str << "\n";
+		std::cout << "setStr(2): alloc " << (size_t)str << "\n";
 		//str = (char*)malloc(_len + 1);
 		memset(str, 0, _len + 1);
 		memcpy_s(str, _len, _str, _len);
@@ -2028,10 +2024,10 @@ namespace RJSON
 		char* tmpPtr = new char[oldSize + 2](0);
 		memcpy_s(tmpPtr, oldSize, str, oldSize);
 		tmpPtr[oldSize] = _src;
-		std::cout << "freed " << (size_t)str << "\n";
+		std::cout << "append(1): freed " << (size_t)str << "\n";
 		delete[] str;
 		str = tmpPtr;
-		std::cout << "alloc " << (size_t)str << "\n";
+		std::cout << "append(1): alloc " << (size_t)str << "\n";
 	}
 
 	void HeapString::append(const char* _src, size_t _count)
@@ -2045,17 +2041,17 @@ namespace RJSON
 		char* tmpPtr = new char[oldSize + _count + 1](0);
 		memcpy_s(tmpPtr, oldSize, str, oldSize);
 		memcpy_s((char*)tmpPtr + oldSize, _count, _src, _count);
-		std::cout << "freed " << (size_t)str << "\n";
+		std::cout << "append(2): freed " << (size_t)str << "\n";
 		delete[] str;
 		str = tmpPtr;
-		std::cout << "alloc " << (size_t)str << "\n";
+		std::cout << "append(2): alloc " << (size_t)str << "\n";
 	}
 
 	void HeapString::free()
 	{
 		if (str)
 		{
-			std::cout << "freed " << (size_t)str << "\n";
+			std::cout << "free(): freed " << (size_t)str << "\n";
 			delete[] str;
 			str = nullptr;
 		}
@@ -2071,5 +2067,14 @@ namespace RJSON
 		return getPtr();
 	}
 
+	JSONError::JSONError() : 
+		location(0), error(JSONErrors::OK)
+	{
+	}
+
+	JSONError::JSONError(size_t _location, JSONErrors _error) :
+		location(_location), error(_error)
+	{
+	}
 }
 #endif // __RJSON__

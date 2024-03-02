@@ -60,7 +60,7 @@ namespace RJSON {
 	} typedef JSONType;
 
 	using JSONElementArray = std::vector<JSONElement>;
-	static inline JSONElementArray EmptyJSONArray;
+	//static JSONElementArray EmptyJSONArray;
 
 
 	using string = std::string;
@@ -153,10 +153,8 @@ namespace RJSON {
 		void setBool(bool _bool);
 
 		JSONElementArray* getArrayPtr() const;
-		JSONElementArray& getArray() const;
 		void setArray(JSONElementArray& _array);
 		void setArray(JSONElementArray* _array);
-	
 
 		void setNull();
 	private:
@@ -174,7 +172,7 @@ namespace RJSON {
 
 
 
-	enum class JSONErrors : char
+	enum class JSONErrors : size_t
 	{
 		OK,
 		Unexpected_Character,
@@ -189,8 +187,10 @@ namespace RJSON {
 	};
 
 	struct JSONError {
-		size_t		errorLocation : 7;
-		JSONErrors	error : 1;
+		JSONError();
+		JSONError(size_t _location, JSONErrors _error);
+		size_t		location : 56;
+		JSONErrors	error : 8;
 	};
 
 	// get index to first byte after whitespace
@@ -305,6 +305,8 @@ if (_off == string::npos)\
 		// @return JSONType
 		JSONType						getType() const;
 
+		void							setType(JSONType _type);
+
 		// Automatically set the type of this element
 		// Deprecated!
 		void							autoType();
@@ -378,11 +380,8 @@ if (_off == string::npos)\
 		HeapString&						getValueHeapStr();
 
 		JSONElementArray				children;
-		JSONType						type = JSONTypes::Object;
 
-
-		JSONErrors						error = JSONErrors::OK;
-		size_t							errorLocation = 0;
+		JSONError						error;
 	private:
 		JSONData						data;
 		string							asJSONFormatted(string& _indent, string _whitespace) const;
@@ -416,8 +415,7 @@ if (_off == string::npos)\
 		bool findEndOfNumber(size_t& start, HeapString& value);
 
 
-		JSONErrors error = JSONErrors::OK;
-		size_t errorLocation = 0;
+		JSONError error;
 		size_t totalSizeBefore = 0;
 		size_t off = 0;
 		size_t size = 0;
