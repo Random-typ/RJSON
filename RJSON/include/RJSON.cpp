@@ -15,7 +15,6 @@ namespace RJSON
 	{
 		setType(_elem.getType());
 		setName(_elem.getName());
-		data.copyData(_elem.data);
 		data = _elem.data;
 	}
 	
@@ -732,7 +731,7 @@ namespace RJSON
 	JSONElement& JSONElement::operator=(const JSONElement& _json)
 	{
 		setName(_json.getName());
-		data.copyData(_json.data);
+		data = _json.data;
 		children = _json.children;
 		setType(_json.getType());
 
@@ -760,10 +759,6 @@ namespace RJSON
 		data.setName(_name);
 	}
 
-	void JSONElement::setNamePtr(const char* _name)
-	{
-		data.setNamePtr(_name);
-	}
 
 	const char* JSONElement::getName() const
 	{
@@ -771,6 +766,11 @@ namespace RJSON
 	}
 
 	void JSONElement::setValue(const char* _str)
+	{
+		data.setString(_str);
+	}
+
+	void JSONElement::setValue(const HeapString& _str)
 	{
 		data.setString(_str);
 	}
@@ -793,11 +793,6 @@ namespace RJSON
 	void JSONElement::setValueNull()
 	{
 		data.setNull();
-	}
-
-	void JSONElement::setValuePtr(const char* _ptr)
-	{
-		data.setStringPtr(_ptr);
 	}
 
 	const char* JSONElement::getValuePtr()
@@ -1037,7 +1032,7 @@ namespace RJSON
 		case '\"':
 			json.setType(JSONTypes::String);
 			off++;
-			json.setValuePtr(parseString());
+			json.setValue(parseString());
 			return;
 		case '-':
 		case '0':
@@ -1724,7 +1719,6 @@ namespace RJSON
 		{
 		case '"':
 			_elem.setValue(parseString(_elem, _data, _off).c_str());
-			_elem.setType(JSONTypes::String);
 			break;
 		case '0':
 		case '1':
@@ -1793,19 +1787,6 @@ namespace RJSON
 		{
 			delete array;
 		}
-		if (getType() == JSONTypes::String)
-		{
-			string.free();
-		}
-		name.free();
-	}
-
-	void JSONData::copyData(const JSONData& _data)
-	{
-		if (_data.getType() == JSONTypes::String)
-		{
-			setString(_data.getStringPtr());
-		}
 	}
 
 	JSONType JSONData::getType() const
@@ -1824,6 +1805,10 @@ namespace RJSON
 			_type = (JSONType)((__int8)JSONTypes::_deleteArray | (__int8)JSONTypes::Array);
 			return;
 		}
+		if (type == JSONType::String && _type != JSONType::String)
+		{
+			string.free();
+		}
 		type = _type;
 	}
 
@@ -1839,11 +1824,6 @@ namespace RJSON
 			return;
 		}
 		name.setStr(_name);
-	}
-
-	void JSONData::setNamePtr(const char* _name)
-	{
-		name.setPtr(_name);
 	}
 
 	HeapString& JSONData::getHeapString()
@@ -1893,10 +1873,9 @@ namespace RJSON
 		string = _string;
 	}
 
-	void JSONData::setStringPtr(const char* _string)
+	void JSONData::setString(const HeapString& _string)
 	{
-		setType(JSONTypes::String);
-		string.setPtr(_string);
+		string = _string;
 	}
 
 	long long JSONData::getInteger() const
@@ -1970,17 +1949,42 @@ namespace RJSON
 		setType(JSONTypes::Null);
 	}
 
+	void JSONData::copyValue(const JSONData& _jsonData)
+	{
+		setType(_jsonData.type);
+		_jsonData.name = name;
+	}
+
+	HeapString::HeapString(HeapString&& _heapString)
+	{
+		refCount = _heapString.refCount;
+		str = _heapString.str;
+		_heapString.refCount = nullptr;
+		_heapString.str = nullptr;
+	}
+
 	HeapString::HeapString(const HeapString& _heapString)
 	{
-		setStr(_heapString);
+		refCount = _heapString.refCount;
+		str = _heapString.str;
+		if (str)
+		{
+			(*refCount)++;
+		}
 	}
 
 	HeapString::HeapString(const char* _str) : HeapString(_str, strlen(_str))
 	{}
 
-	HeapString::HeapString(const char* _str, size_t _len)
+	HeapString::HeapString(const char* _str, size_t _len) : str(nullptr)
 	{
+		refCount = new uint64_t(1);
 		setStr(_str, _len);
+	}
+
+	HeapString::~HeapString()
+	{
+		free();
 	}
 
 	size_t HeapString::size()
@@ -1999,17 +2003,22 @@ namespace RJSON
 
 	void HeapString::setStr(const char* _str, size_t _len)
 	{
+		if (*refCount <= 1)
+		{
+			if (str)
+			{
+				std::cout << "setStr(2): free " << (size_t)str << "\n";
+				delete[] str;
+			}
+		}
+		else {
+			(*refCount)--;
+		}
 		str = new char[_len + 1];
 		std::cout << "setStr(2): alloc " << (size_t)str << "\n";
 		//str = (char*)malloc(_len + 1);
 		memset(str, 0, _len + 1);
 		memcpy_s(str, _len, _str, _len);
-	}
-
-	void HeapString::setPtr(const char* _str)
-	{
-		str = (char*)_str;
-		std::cout << "set " << (size_t)str << "\n";
 	}
 
 	void HeapString::append(char _src)
@@ -2024,8 +2033,18 @@ namespace RJSON
 		char* tmpPtr = new char[oldSize + 2](0);
 		memcpy_s(tmpPtr, oldSize, str, oldSize);
 		tmpPtr[oldSize] = _src;
-		std::cout << "append(1): freed " << (size_t)str << "\n";
-		delete[] str;
+		if (*refCount <= 1)
+		{
+			if (str)
+			{
+				std::cout << "append(1): freed " << (size_t)str << "\n";
+				delete[] str;
+			}
+		}
+		else {
+			(*refCount)--;
+		}
+		
 		str = tmpPtr;
 		std::cout << "append(1): alloc " << (size_t)str << "\n";
 	}
@@ -2041,20 +2060,19 @@ namespace RJSON
 		char* tmpPtr = new char[oldSize + _count + 1](0);
 		memcpy_s(tmpPtr, oldSize, str, oldSize);
 		memcpy_s((char*)tmpPtr + oldSize, _count, _src, _count);
-		std::cout << "append(2): freed " << (size_t)str << "\n";
-		delete[] str;
+		if (*refCount <= 1)
+		{
+			if (str)
+			{
+				std::cout << "append(2): freed " << (size_t)str << "\n";
+				delete[] str;
+			}
+		}
+		else {
+			(*refCount)--;
+		}
 		str = tmpPtr;
 		std::cout << "append(2): alloc " << (size_t)str << "\n";
-	}
-
-	void HeapString::free()
-	{
-		if (str)
-		{
-			std::cout << "free(): freed " << (size_t)str << "\n";
-			delete[] str;
-			str = nullptr;
-		}
 	}
 
 	char* HeapString::getPtr() const
@@ -2062,9 +2080,63 @@ namespace RJSON
 		return str;
 	}
 
+	void HeapString::free()
+	{
+		(*refCount)--;
+		if (*refCount == 0)
+		{
+			if (nullptr != str)
+				delete str;
+
+			delete refCount;
+		}
+
+
+		return;
+		if (!refCount)
+		{
+			return;
+		}
+		if (!*refCount || *refCount > 5)
+		{
+			std::cout << 2;
+
+		}
+		(*refCount)--;
+		if (!*refCount)
+		{
+			std::cout << "deleted: " << std::hex << refCount << "\n";
+			std::cout << "~HeapString(): freed " << (size_t)str << "\n";
+			delete refCount;
+			delete[] str;
+			refCount = nullptr;
+			str = nullptr;
+		}
+	}
+
 	HeapString::operator const char*() const
 	{
 		return getPtr();
+	}
+
+	HeapString& HeapString::operator=(const HeapString& _heapString)
+	{
+		free();
+		refCount = _heapString.refCount;
+		str = _heapString.str;
+		if (str)
+		{
+			(*refCount)++;
+		}
+	}
+
+	HeapString& HeapString::operator=(HeapString&& _heapString)
+	{
+		free();
+		refCount = _heapString.refCount;
+		str = _heapString.str;
+		_heapString.refCount = nullptr;
+		_heapString.str = nullptr;
 	}
 
 	JSONError::JSONError() : 

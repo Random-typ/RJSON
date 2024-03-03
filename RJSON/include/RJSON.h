@@ -84,36 +84,35 @@ namespace RJSON {
 		*/
 	};
 
-	// basic string class which allocates on the heap but does not free allocated space
 	class HeapString {
 	public:
-		HeapString() : str(nullptr) {};
-		// copying is expensive dont do it
+		HeapString() : str(nullptr), refCount(new uint64_t(1)) {};
+		HeapString(HeapString&& _heapString);
 		HeapString(const HeapString& _heapString);
 		HeapString(const char* _str);
 		HeapString(const char* _str, size_t _len);
+		~HeapString();
 
 		size_t size();
 
-		// does not free str
 		void setStr(const char* _str);
-		// does not free str
 		void setStr(const char* _str, size_t _len);
-
-		void setPtr(const char* _str);
 
 		void append(char _src);
 		void append(const char* _src, size_t _count);
 
-		// frees str if allocated
-		void free();
-
 		char* getPtr() const;
+
+		void free();
 
 		operator const char*() const;
 
+		HeapString& operator=(const HeapString& _heapString);
+		HeapString& operator=(HeapString&& _heapString);
+
 	private:
 		char* str;
+		uint64_t* refCount;
 	};
 
 
@@ -122,17 +121,13 @@ namespace RJSON {
 		JSONData() : type(JSONTypes::Unknown), dummy{0} {}
 		~JSONData();
 
-		void copyData(const JSONData& _data);
-
 		JSONType getType() const;
 		void setType(JSONType _type);
 		
 		const char* getName() const;
 		// MUST be null terminated
 		void setName(const char* _name);
-		
-		void setNamePtr(const char* _name);
-		
+
 
 		HeapString& getHeapString();
 
@@ -141,8 +136,8 @@ namespace RJSON {
 		const char* getStringPtr() const;
 		// MUST be null terminated
 		void setString(const char* _string);
-		void setStringPtr(const char* _string);
-		
+		void setString(const HeapString& _string);
+
 		long long getInteger() const;
 		void setInteger(long long _integer);
 
@@ -157,6 +152,8 @@ namespace RJSON {
 		void setArray(JSONElementArray* _array);
 
 		void setNull();
+
+		void copyValue(const JSONData& _jsonData);
 	private:
 		JSONType type;
 		HeapString name;
@@ -363,17 +360,15 @@ if (_off == string::npos)\
 		bool							hasValue() const;
 		// allocates space and copies _name
 		void							setName(const char* _name);
-		// does not allocate space and does not copy _name
-		void							setNamePtr(const char* _name);
 		const char*						getName() const;
 
 		// does create a copy of _str
 		void							setValue(const char* _str);
+		void							setValue(const HeapString& _str);
 		void							setValue(long long _integer);
 		void							setValue(bool _bool);
 		void							setValue(long double _bool);
 		void							setValueNull();
-		void							setValuePtr(const char* _ptr);
 
 		const char*						getValuePtr();
 
