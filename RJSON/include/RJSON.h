@@ -28,6 +28,7 @@
 #include <functional>
 #include <locale>
 #include <codecvt>
+#include <span>
 
 #include <iostream>
 
@@ -55,8 +56,7 @@ namespace RJSON {
 		Boolean,
 		Null,
 		Object,
-		Array,
-		_deleteArray = 64// internal use
+		Array
 	} typedef JSONType;
 
 	using JSONElementArray = std::vector<JSONElement>;
@@ -84,6 +84,33 @@ namespace RJSON {
 		*/
 	};
 
+	class SmallString {
+	public:
+		SmallString() {
+			value = "\0";
+		}
+		SmallString(const SmallString& _str);
+		SmallString(const char* _str);
+		SmallString(const char* _str, size_t _len);
+		~SmallString();
+
+		size_t size() const;
+
+		void append(const char _str);
+		void append(const char* _str, size_t _count);
+
+		void setStr(const char* _str);
+		void setStr(const char* _str, size_t _len);
+
+		const char* c_str() const;
+
+		operator const char*() const;
+
+		void operator=(const SmallString& _str);
+	private:
+		std::string_view value;
+	};
+
 	class HeapString {
 	public:
 		HeapString() : str(nullptr), refCount(new uint64_t(1)) {};
@@ -107,18 +134,16 @@ namespace RJSON {
 
 		operator const char*() const;
 
-		HeapString& operator=(const HeapString& _heapString);
-		HeapString& operator=(HeapString&& _heapString);
-
 	private:
 		char* str;
 		uint64_t* refCount;
 	};
 
-
 	class JSONData {
 	public:
-		JSONData() : type(JSONTypes::Unknown), dummy{0} {}
+		JSONData() : type(JSONTypes::Unknown), dummy{ 0 } { cleanup(); }
+		JSONData(const JSONData& _jsonData);
+
 		~JSONData();
 
 		JSONType getType() const;
@@ -128,15 +153,15 @@ namespace RJSON {
 		// MUST be null terminated
 		void setName(const char* _name);
 
-
-		HeapString& getHeapString();
-
-		// converts value to string if not already
+		// converts value to std::string if not already
 		std::string getString() const;
+		
+		std::string& getRawString();
+
 		const char* getStringPtr() const;
 		// MUST be null terminated
 		void setString(const char* _string);
-		void setString(const HeapString& _string);
+		void setString(const std::string& _string);
 
 		long long getInteger() const;
 		void setInteger(long long _integer);
@@ -148,22 +173,24 @@ namespace RJSON {
 		void setBool(bool _bool);
 
 		JSONElementArray* getArrayPtr() const;
-		void setArray(JSONElementArray& _array);
-		void setArray(JSONElementArray* _array);
-
+		void setArray(const JSONElementArray& _array);
+		
 		void setNull();
 
-		void copyValue(const JSONData& _jsonData);
+		void operator=(const JSONData& _jsonData);
 	private:
+		// sets type to unknown and frees data
+		void cleanup();
+
 		JSONType type;
-		HeapString name;
-		union {// value 
-			char		dummy[8];
-			HeapString  string;
+		std::string name;
+		union {// value
+			char		dummy[std::max(sizeof(std::string), sizeof(std::shared_ptr<JSONElementArray>))];
+			std::string string;
 			long long	integer;
 			long double	dbl;
 			bool		boolean;
-			JSONElementArray* array;
+			std::shared_ptr<JSONElementArray> array;
 		};
 	};
 
@@ -364,7 +391,7 @@ if (_off == string::npos)\
 
 		// does create a copy of _str
 		void							setValue(const char* _str);
-		void							setValue(const HeapString& _str);
+		void							setValue(const string& _str);
 		void							setValue(long long _integer);
 		void							setValue(bool _bool);
 		void							setValue(long double _bool);
@@ -372,7 +399,7 @@ if (_off == string::npos)\
 
 		const char*						getValuePtr();
 
-		HeapString&						getValueHeapStr();
+		string&							getRawString();
 
 		JSONElementArray				children;
 
@@ -401,13 +428,13 @@ if (_off == string::npos)\
 	private:
 		JSONElement parseStream();
 		void parseValue(JSONElement& json);
-		HeapString parseString();
+		string parseString();
 		void parseObject(JSONElement& object);
 		void parseArray(JSONElement& object);
 
 		bool readBuffer();
 		bool findEndOfWhitespace();
-		bool findEndOfNumber(size_t& start, HeapString& value);
+		bool findEndOfNumber(size_t& start, std::string& value);
 
 
 		JSONError error;
